@@ -11,7 +11,7 @@ namespace Nekuzaky.Vicinity
         public float InnerLoadDistanceSquared;
         public float InnerUnloadDistanceSquared;
         public int CellIndex;
-        public float RelativeCost;
+        public float PriorityMultiplier;
         public byte IsActive;
         public byte IsMobile;
     }

@@ -17,6 +17,7 @@ namespace Nekuzaky.Vicinity
         public float InnerLoadDistance;
         public float InnerUnloadDistance;
         public long EstimatedBytes;
+        public float PriorityScale;
         public bool IsMobile;
     }
 
@@ -104,7 +105,7 @@ namespace Nekuzaky.Vicinity
                 InnerLoadDistanceSquared = innerLoadDistance * innerLoadDistance,
                 InnerUnloadDistanceSquared = innerUnloadDistance * innerUnloadDistance,
                 CellIndex = -1,
-                RelativeCost = ComputeRelativeCost(registration.EstimatedBytes),
+                PriorityMultiplier = ComputePriorityMultiplier(registration.EstimatedBytes, registration.PriorityScale),
                 IsActive = 1,
                 IsMobile = registration.IsMobile ? (byte)1 : (byte)0
             };
@@ -298,11 +299,14 @@ namespace Nekuzaky.Vicinity
         private bool _jobsScheduled;
         private bool _budgetWarningLogged;
 
-        private static float ComputeRelativeCost(long estimatedBytes)
+        private static float ComputePriorityMultiplier(long estimatedBytes, float priorityScale)
         {
-            return estimatedBytes <= 0L
+            float cost = estimatedBytes <= 0L
                 ? 0f
                 : math.min(estimatedBytes / CostReferenceBytes, MaximumRelativeCost);
+
+            float scale = priorityScale <= 0f ? 1f : priorityScale;
+            return (1f + cost) * scale;
         }
 
         private bool IsValidIndex(int entryIndex) => entryIndex >= 0 && entryIndex < _entries.Length;

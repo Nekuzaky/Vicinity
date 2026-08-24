@@ -21,8 +21,8 @@ namespace Nekuzaky.Vicinity.Editor
                 return;
             }
 
-            ResolveDistances(managed, out float loadDistance, out float unloadDistance);
-            VicinityHandles.DrawRings(managed.transform.position, loadDistance, unloadDistance, stateColor);
+            DistancePreview preview = VicinityDistancePreview.Resolve(managed);
+            VicinityHandles.DrawRings(managed.transform.position, preview.LoadDistance, preview.ReleaseDistance, stateColor);
         }
 
         [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected, typeof(VicinityVolume))]
@@ -36,22 +36,5 @@ namespace Nekuzaky.Vicinity.Editor
             VicinityHandles.DrawVolumeBox(volume);
         }
 
-        internal static void ResolveDistances(VicinityObject managed, out float loadDistance, out float unloadDistance)
-        {
-            if (managed.OverridesDistances)
-            {
-                loadDistance = managed.LoadDistance;
-                unloadDistance = managed.UnloadDistance;
-                return;
-            }
-
-            VicinityVolume covering = VicinityVolume.FindCovering(managed.transform.position);
-            VicinityProfile profile = covering != null && covering.Profile != null
-                ? covering.Profile
-                : VicinitySceneSetup.FindManager()?.Profile;
-
-            loadDistance = profile != null ? profile.LoadDistance : ResidencySettings.DefaultLoadDistance;
-            unloadDistance = profile != null ? profile.UnloadDistance : ResidencySettings.DefaultUnloadDistance;
-        }
     }
 }

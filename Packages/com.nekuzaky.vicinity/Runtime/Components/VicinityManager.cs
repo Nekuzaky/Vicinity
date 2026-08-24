@@ -1,3 +1,4 @@
+using Nekuzaky.Vicinity.Graph;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
@@ -75,6 +76,8 @@ namespace Nekuzaky.Vicinity
             _controller?.Dispose();
             _controller = null;
 
+            ClearCompiledGraphs();
+
             if (_activeManager == this)
             {
                 _activeManager = null;
@@ -94,10 +97,23 @@ namespace Nekuzaky.Vicinity
         /// <summary>What Vicinity is currently holding in memory.</summary>
         public ResidencyStatistics Statistics => _controller?.Statistics ?? default;
 
-        /// <summary>Assigns the profile used by objects that no volume covers.</summary>
+        /// <summary>
+        /// Assigns the profile used by objects that no volume covers. Objects already managed are
+        /// re-measured against it, so this is safe to call after the scene has started.
+        /// </summary>
         public void SetProfile(VicinityProfile profile)
         {
             m_profile = profile;
+            ClearCompiledGraphs();
+
+            if (_controller == null)
+            {
+                return;
+            }
+
+            _settings = profile != null ? profile.ToSettings() : ResidencySettings.Default;
+            _controller.Settings = _settings;
+            ReattachEverything();
         }
 
         /// <summary>Where one quality step stands between "not in memory" and "fully loaded".</summary>
@@ -225,12 +241,15 @@ namespace Nekuzaky.Vicinity
         private readonly List<VicinityObject> _managedObjects = new List<VicinityObject>();
         private readonly List<int> _entryLevels = new List<int>();
         private readonly List<VicinityObject> _mobileObjects = new List<VicinityObject>();
+        private readonly Dictionary<VicinityProfile, CompiledResidencyRules> _compiledGraphs =
+            new Dictionary<VicinityProfile, CompiledResidencyRules>();
         private readonly Plane[] _frustumPlanes = new Plane[FrustumPlaneCount];
 
         private ResidencyController _controller;
         private AssetProviderRegistry _providers;
         private ResidencySettings _settings;
         private Camera[] _cameraBuffer;
+        private bool _tagsUsable = true;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStaticState()
@@ -261,6 +280,41 @@ namespace Nekuzaky.Vicinity
             }
         }
 
+        private void ClearCompiledGraphs()
+        {
+            foreach (KeyValuePair<VicinityProfile, CompiledResidencyRules> compiled in _compiledGraphs)
+            {
+                compiled.Value?.Dispose();
+            }
+
+            _compiledGraphs.Clear();
+        }
+
+        private void ReattachEverything()
+        {
+            List<VicinityObject> attached = new List<VicinityObject>();
+
+            for (int i = 0; i < _managedObjects.Count; i++)
+            {
+                VicinityObject managed = _managedObjects[i];
+
+                if (managed != null && !attached.Contains(managed))
+                {
+                    attached.Add(managed);
+                }
+            }
+
+            for (int i = 0; i < attached.Count; i++)
+            {
+                Detach(attached[i]);
+            }
+
+            for (int i = 0; i < attached.Count; i++)
+            {
+                Attach(attached[i]);
+            }
+        }
+
         private VicinityObject ResolveObject(int entryIndex)
         {
             return entryIndex >= 0 && entryIndex < _managedObjects.Count ? _managedObjects[entryIndex] : null;
@@ -283,10 +337,10 @@ namespace Nekuzaky.Vicinity
 
         private EntryRegistration BuildRegistration(VicinityObject managed, int level)
         {
-            ResolveDistances(managed, out float loadDistance, out float unloadDistance);
+            ResolvedRule rule = ResolveRule(managed);
 
-            float marginRatio = loadDistance > 0f ? unloadDistance / loadDistance : FallbackMarginRatio;
-            ResolveBand(managed, level, loadDistance, out float innerRange, out float outerRange);
+            float marginRatio = rule.LoadDistance > 0f ? rule.ReleaseDistance / rule.LoadDistance : FallbackMarginRatio;
+            ResolveBand(managed, level, rule.LoadDistance, out float innerRange, out float outerRange);
 
             return new EntryRegistration
             {
@@ -298,6 +352,7 @@ namespace Nekuzaky.Vicinity
                 InnerLoadDistance = innerRange,
                 InnerUnloadDistance = innerRange / marginRatio,
                 EstimatedBytes = managed.EstimatedMemoryBytes,
+                PriorityScale = rule.PriorityScale,
                 IsMobile = managed.MovesAtRuntime
             };
         }
@@ -315,20 +370,91 @@ namespace Nekuzaky.Vicinity
             innerRange = level == 0 ? 0f : managed.GetLevel(level - 1).Range;
         }
 
-        private void ResolveDistances(VicinityObject managed, out float loadDistance, out float unloadDistance)
+        private ResolvedRule ResolveRule(VicinityObject managed)
         {
             if (managed.OverridesDistances)
             {
-                loadDistance = managed.LoadDistance;
-                unloadDistance = managed.UnloadDistance;
-                return;
+                return new ResolvedRule
+                {
+                    LoadDistance = managed.LoadDistance,
+                    ReleaseDistance = managed.UnloadDistance,
+                    PriorityScale = 1f
+                };
             }
 
             VicinityVolume covering = VicinityVolume.FindCovering(managed.transform.position);
             VicinityProfile profile = covering != null && covering.Profile != null ? covering.Profile : m_profile;
 
-            loadDistance = profile != null ? profile.LoadDistance : ResidencySettings.DefaultLoadDistance;
-            unloadDistance = profile != null ? profile.UnloadDistance : ResidencySettings.DefaultUnloadDistance;
+            ResolvedRule fallback = new ResolvedRule
+            {
+                LoadDistance = profile != null ? profile.LoadDistance : ResidencySettings.DefaultLoadDistance,
+                ReleaseDistance = profile != null ? profile.UnloadDistance : ResidencySettings.DefaultUnloadDistance,
+                PriorityScale = 1f
+            };
+
+            CompiledResidencyRules rules = RulesFor(profile);
+            return rules == null ? fallback : rules.Evaluate(BuildFacts(managed, rules.Tag), fallback);
+        }
+
+        private CompiledResidencyRules RulesFor(VicinityProfile profile)
+        {
+            if (profile == null || profile.ResidencyGraph == null)
+            {
+                return null;
+            }
+
+            if (_compiledGraphs.TryGetValue(profile, out CompiledResidencyRules cached))
+            {
+                return cached.IsValid ? cached : null;
+            }
+
+            CompiledResidencyRules compiled = profile.ResidencyGraph.Compile();
+            _compiledGraphs[profile] = compiled;
+
+            if (compiled.IsValid)
+            {
+                return compiled;
+            }
+
+            Debug.LogError(
+                $"Vicinity could not use the residency graph '{profile.ResidencyGraph.name}'. {compiled.Problem} " +
+                "The distances on the profile are used instead.",
+                profile);
+
+            return null;
+        }
+
+        private ObjectFacts BuildFacts(VicinityObject managed, string tag)
+        {
+            return new ObjectFacts
+            {
+                SizeMeters = managed.BoundsRadius * 2f,
+                MemoryMegabytes = managed.EstimatedMemoryBytes / (1024f * 1024f),
+                TagMatch = MatchesTag(managed, tag) ? 1f : 0f
+            };
+        }
+
+        private bool MatchesTag(VicinityObject managed, string tag)
+        {
+            if (!_tagsUsable || string.IsNullOrEmpty(tag))
+            {
+                return false;
+            }
+
+            try
+            {
+                return managed.CompareTag(tag);
+            }
+            catch (UnityException)
+            {
+                _tagsUsable = false;
+                Debug.LogWarning(
+                    $"Vicinity's residency graph asks about the tag '{tag}', which this project does not define. " +
+                    "Every object is treated as not matching. This message is not repeated.",
+                    this);
+
+                return false;
+            }
         }
 
         private VicinityViewState BuildViewState(VicinityTarget target)

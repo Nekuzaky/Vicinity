@@ -150,22 +150,56 @@ namespace Nekuzaky.Vicinity.Editor
             if (stepsCarryDistances)
             {
                 EditorGUILayout.HelpBox(
-                    "With several quality steps, each step's own distance decides where it is used. The distances below are ignored.",
+                    "With several quality steps, each step's own distance decides where it is used.",
                     MessageType.Info);
+
+                return;
             }
 
-            using (new EditorGUI.DisabledScope(stepsCarryDistances))
+            if (_overrideDistances.boolValue)
+            {
+                DrawOwnDistances();
+                return;
+            }
+
+            DrawInheritedDistances();
+        }
+
+        private void DrawOwnDistances()
+        {
+            EditorGUILayout.PropertyField(_loadDistance, new GUIContent("Loads at"));
+            EditorGUILayout.PropertyField(_unloadDistance, new GUIContent("Released at"));
+
+            if (GUILayout.Button("Go back to the shared distances"))
+            {
+                _overrideDistances.boolValue = false;
+            }
+        }
+
+        private void DrawInheritedDistances()
+        {
+            if (targets.Length != 1 || target is not VicinityObject managed)
             {
                 EditorGUILayout.PropertyField(_overrideDistances);
-
-                using (new EditorGUI.DisabledScope(!_overrideDistances.boolValue))
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUILayout.PropertyField(_loadDistance);
-                    EditorGUILayout.PropertyField(_unloadDistance);
-                    EditorGUI.indentLevel--;
-                }
+                return;
             }
+
+            DistancePreview preview = VicinityDistancePreview.Resolve(managed);
+
+            EditorGUILayout.LabelField(
+                "Distances",
+                $"loads at {preview.LoadDistance:0.#} m, released at {preview.ReleaseDistance:0.#} m");
+
+            EditorGUILayout.LabelField(" ", $"from {preview.Source}", EditorStyles.miniLabel);
+
+            if (!GUILayout.Button("Set distances just for this object"))
+            {
+                return;
+            }
+
+            _overrideDistances.boolValue = true;
+            _loadDistance.floatValue = preview.LoadDistance;
+            _unloadDistance.floatValue = preview.ReleaseDistance;
         }
 
         private void DrawMissingModelWarning()

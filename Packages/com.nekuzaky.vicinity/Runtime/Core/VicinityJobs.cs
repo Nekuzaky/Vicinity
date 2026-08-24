@@ -61,7 +61,7 @@ namespace Nekuzaky.Vicinity
         private static float ComputePriority(in VicinityEntryData entry, float distanceSquared, in VicinityViewState view, float hiddenPriorityScale)
         {
             float priority = math.sqrt(distanceSquared);
-            float sizePenalty = 1f + entry.RelativeCost;
+            float sizePenalty = entry.PriorityMultiplier;
 
             return IsInsideFrustum(entry, view) ? priority * sizePenalty : priority * sizePenalty * hiddenPriorityScale;
         }

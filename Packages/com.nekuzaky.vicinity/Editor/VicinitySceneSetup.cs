@@ -27,23 +27,6 @@ namespace Nekuzaky.Vicinity.Editor
             return Object.FindFirstObjectByType<VicinityTarget>(FindObjectsInactive.Include);
         }
 
-        [MenuItem("Tools/Vicinity/Set Up This Scene", false, 1)]
-        internal static void SetUpSceneFromMenu()
-        {
-            SetupResult result = SetUpScene(false);
-
-            string message = result.Equipped == 0
-                ? "Vicinity found nothing new to manage in this scene."
-                : $"Vicinity now manages {result.Equipped} objects, {VicinityEditorStyles.DescribeBytes(result.TotalBytes)} of models.";
-
-            if (result.SkippedHandEdited > 0)
-            {
-                message += $" {result.SkippedHandEdited} objects you configured by hand were left untouched.";
-            }
-
-            EditorUtility.DisplayDialog("Vicinity", message, "Done");
-        }
-
         internal static VicinityManager EnsureManager()
         {
             VicinityManager existing = FindManager();

@@ -49,6 +49,7 @@ namespace Nekuzaky.Vicinity.Editor
             gizmoToggle.SetValueWithoutNotify(VicinityEditorStyles.GizmosVisible);
             gizmoToggle.RegisterValueChangedCallback(OnGizmoToggleChanged);
 
+            BuildFooter();
             SelectTab(_activeTab);
         }
 
@@ -103,6 +104,9 @@ namespace Nekuzaky.Vicinity.Editor
         private const int LiveTabIndex = 2;
         private const int MemorySampleCount = 300;
         private const string ActiveTabClass = "vicinity-tab--active";
+        private const string SponsorsUrl = "https://github.com/sponsors/Nekuzaky";
+        private const string PatreonUrl = "https://www.patreon.com/Nekuzaky";
+        private const string CoffeeUrl = "https://www.buymeacoffee.com/nekuzaky";
 
         private ScrollView _content;
         private Button[] _tabs;
@@ -114,6 +118,35 @@ namespace Nekuzaky.Vicinity.Editor
         private Label _liveExclusions;
         private readonly Dictionary<string, Label> _liveValues = new Dictionary<string, Label>();
         private readonly List<ResidencySample> _samples = new List<ResidencySample>();
+
+        private void BuildFooter()
+        {
+            VisualElement footer = rootVisualElement.Q<VisualElement>("footer");
+
+            if (footer == null)
+            {
+                return;
+            }
+
+            Image icon = new Image { image = VicinityEditorStyles.SupportIcon };
+            icon.AddToClassList("vicinity-footer__icon");
+            footer.Add(icon);
+
+            Label text = new Label("Free for noncommercial use. If Vicinity saved you time:");
+            text.AddToClassList("vicinity-footer__text");
+            footer.Add(text);
+
+            footer.Add(BuildSupportLink("GitHub Sponsors", SponsorsUrl));
+            footer.Add(BuildSupportLink("Patreon", PatreonUrl));
+            footer.Add(BuildSupportLink("Buy me a coffee", CoffeeUrl));
+        }
+
+        private static Button BuildSupportLink(string label, string url)
+        {
+            Button link = new Button(() => Application.OpenURL(url)) { text = label, tooltip = url };
+            link.AddToClassList("vicinity-footer__link");
+            return link;
+        }
 
         private void OnGizmoToggleChanged(ChangeEvent<bool> evt)
         {

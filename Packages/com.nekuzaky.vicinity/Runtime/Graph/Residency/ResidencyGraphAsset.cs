@@ -47,7 +47,7 @@ namespace Nekuzaky.Vicinity.Graph
                 : EmitConstant(fallback);
         }
 
-        internal CompiledResidencyRules Finish(int loadRegister, int releaseRegister, int priorityRegister)
+        internal CompiledResidencyRules Finish(int loadRegister, int releaseRegister, int priorityRegister, string tag)
         {
             NativeArray<RuleInstruction> instructions =
                 new NativeArray<RuleInstruction>(_instructions.Count, Allocator.Persistent);
@@ -66,7 +66,7 @@ namespace Nekuzaky.Vicinity.Graph
             }
 
             return CompiledResidencyRules.Accepted(
-                instructions, constants, loadRegister, releaseRegister, priorityRegister);
+                instructions, constants, loadRegister, releaseRegister, priorityRegister, tag);
         }
 
         #endregion
@@ -111,6 +111,11 @@ namespace Nekuzaky.Vicinity.Graph
                     "The nodes form a loop, so there is no order in which they could run.");
             }
 
+            if (!TryFindTag(out string tag, out string tagProblem))
+            {
+                return CompiledResidencyRules.Rejected(tagProblem);
+            }
+
             RuleProgramBuilder builder = new RuleProgramBuilder(this);
 
             foreach (VicinityNode node in executor.Order)
@@ -133,7 +138,7 @@ namespace Nekuzaky.Vicinity.Graph
             int release = builder.InputRegister(output, "m_releaseDistance", DefaultReleaseDistance);
             int priority = builder.InputRegister(output, "m_priorityScale", DefaultPriorityScale);
 
-            return builder.Finish(load, release, priority);
+            return builder.Finish(load, release, priority, tag);
         }
 
         /// <summary>Creates a graph that reproduces Vicinity's built-in behaviour, ready to be edited.</summary>
@@ -162,6 +167,34 @@ namespace Nekuzaky.Vicinity.Graph
         private const float DefaultLoadDistance = ResidencySettings.DefaultLoadDistance;
         private const float DefaultReleaseDistance = ResidencySettings.DefaultUnloadDistance;
         private const float DefaultPriorityScale = 1f;
+
+        private bool TryFindTag(out string tag, out string problem)
+        {
+            tag = string.Empty;
+            problem = string.Empty;
+
+            foreach (VicinityNode node in Nodes)
+            {
+                if (node is not ObjectTagNode tagNode || string.IsNullOrEmpty(tagNode.Tag))
+                {
+                    continue;
+                }
+
+                if (tag.Length == 0)
+                {
+                    tag = tagNode.Tag;
+                    continue;
+                }
+
+                if (tag != tagNode.Tag)
+                {
+                    problem = $"This graph asks about two different tags, '{tag}' and '{tagNode.Tag}'. One graph can ask about a single tag.";
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         private bool TryFindOutput(out ResidencyOutputNode output, out string problem)
         {

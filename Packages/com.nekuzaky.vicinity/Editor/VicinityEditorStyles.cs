@@ -42,6 +42,8 @@ namespace Nekuzaky.Vicinity.Editor
 
         internal static Texture InfoIcon => LoadIcon("console.infoicon");
 
+        internal static Texture SupportIcon => LoadIcon("Favorite");
+
         internal static string DescribeBytes(long bytes)
         {
             if (bytes <= 0L)

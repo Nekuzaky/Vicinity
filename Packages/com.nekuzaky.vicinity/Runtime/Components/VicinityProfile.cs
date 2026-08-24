@@ -16,6 +16,10 @@ namespace Nekuzaky.Vicinity
         private int m_serializedVersion = CurrentSerializedVersion;
 
         [SerializeField]
+        [Tooltip("Optional. A graph that works out each object's distances from its size, its memory or its tag. Leave empty to use the two distances below for everything.")]
+        private Graph.ResidencyGraphAsset m_residencyGraph;
+
+        [SerializeField]
         [Tooltip("How close the player must be, in meters, before an object starts loading.")]
         [Min(0f)]
         private float m_loadDistance = ResidencySettings.DefaultLoadDistance;
@@ -87,6 +91,9 @@ namespace Nekuzaky.Vicinity
         #endregion
 
         #region Main Methods
+
+        /// <summary>The graph that works out each object's distances, or null when there is none.</summary>
+        public Graph.ResidencyGraphAsset ResidencyGraph => m_residencyGraph;
 
         /// <summary>How close the player must be before an object starts loading, in meters.</summary>
         public float LoadDistance => m_loadDistance;

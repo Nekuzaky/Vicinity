@@ -72,6 +72,9 @@ namespace Nekuzaky.Vicinity.Graph
         /// <summary>Why the graph did not compile, or an empty string.</summary>
         public string Problem { get; private set; } = string.Empty;
 
+        /// <summary>The tag this program asks about, or an empty string when it asks about none.</summary>
+        public string Tag { get; private set; } = string.Empty;
+
         /// <summary>How many instructions the program holds.</summary>
         public int InstructionCount => _instructions.IsCreated ? _instructions.Length : 0;
 
@@ -138,11 +141,13 @@ namespace Nekuzaky.Vicinity.Graph
             NativeArray<float> constants,
             int loadRegister,
             int releaseRegister,
-            int priorityRegister)
+            int priorityRegister,
+            string tag)
         {
             return new CompiledResidencyRules
             {
                 IsValid = true,
+                Tag = tag,
                 _instructions = instructions,
                 _constants = constants,
                 _loadRegister = loadRegister,

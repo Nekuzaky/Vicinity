@@ -13,5 +13,7 @@
         </ui:VisualElement>
 
         <ui:ScrollView name="content" class="vicinity-content" />
+
+        <ui:VisualElement name="footer" class="vicinity-footer" />
     </ui:VisualElement>
 </ui:UXML>
