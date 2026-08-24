@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using Nekuzaky.Vicinity.Graph;
+using Nekuzaky.Vicinity.GraphProcessor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -52,7 +53,7 @@ namespace Nekuzaky.Vicinity.Tests
             LogAssert.ignoreFailingMessages = true;
 
             ResidencyGraphAsset graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
-            graph.Add(new NumberNode { Value = 400f });
+            graph.AddNode(Number(400f));
             _spawned.Add(graph);
 
             yield return BuildScene(graph, distanceFromTarget: 5f);
@@ -75,16 +76,16 @@ namespace Nekuzaky.Vicinity.Tests
         {
             ResidencyGraphAsset graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            NumberNode load = new NumberNode { Value = loadDistance };
-            NumberNode release = new NumberNode { Value = loadDistance * 1.4f };
-            ResidencyOutputNode output = new ResidencyOutputNode();
+            NumberNode load = Number(loadDistance);
+            NumberNode release = Number(loadDistance * 1.4f);
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
 
-            graph.Add(load);
-            graph.Add(release);
-            graph.Add(output);
+            graph.AddNode(load);
+            graph.AddNode(release);
+            graph.AddNode(output);
 
-            graph.Connect(load.Id, "m_result", output.Id, "m_loadDistance");
-            graph.Connect(release.Id, "m_result", output.Id, "m_releaseDistance");
+            Wire(graph, load, "m_result", output, "m_loadDistance");
+            Wire(graph, release, "m_result", output, "m_releaseDistance");
 
             _spawned.Add(graph);
             return graph;
@@ -162,5 +163,23 @@ namespace Nekuzaky.Vicinity.Tests
 
             Assert.Fail($"never reached {expected}; it is {_managed?.State.ToString() ?? "gone"}");
         }
+        private static TNode Make<TNode>() where TNode : BaseNode
+        {
+            return BaseNode.CreateFromType<TNode>(Vector2.zero);
+        }
+
+        private static NumberNode Number(float value)
+        {
+            NumberNode node = Make<NumberNode>();
+            node.Value = value;
+
+            return node;
+        }
+
+        private static void Wire(BaseGraph graph, BaseNode from, string fromField, BaseNode to, string toField)
+        {
+            graph.Connect(to.GetPort(toField, null), from.GetPort(fromField, null));
+        }
+
     }
 }

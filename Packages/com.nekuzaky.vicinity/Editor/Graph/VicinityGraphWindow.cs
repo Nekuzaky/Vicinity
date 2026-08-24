@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Nekuzaky.Vicinity.Graph;
+using Nekuzaky.Vicinity.GraphProcessor;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.UIElements;
@@ -8,17 +8,13 @@ using UnityEngine.UIElements;
 
 namespace Nekuzaky.Vicinity.Editor.Graph
 {
-    internal sealed class VicinityGraphWindow : EditorWindow
+    /// <summary>
+    /// The residency graph editor. The canvas, the node creation menu and the selection handling come from
+    /// NodeGraphProcessor; what Vicinity adds is the sample object in the toolbar and the status line that
+    /// says, in words, what the graph would do to it.
+    /// </summary>
+    internal sealed class VicinityGraphWindow : BaseGraphWindow
     {
-        #region Unity API
-
-        private void OnDisable()
-        {
-            _view = null;
-        }
-
-        #endregion
-
         #region Main Methods
 
         [MenuItem("Tools/Vicinity/Residency Graph", false, 1)]
@@ -48,7 +44,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
         [OnOpenAsset]
         internal static bool OpenFromProject(int instanceId, int line)
         {
-            if (EditorUtility.InstanceIDToObject(instanceId) is not VicinityGraphAsset asset)
+            if (EditorUtility.InstanceIDToObject(instanceId) is not ResidencyGraphAsset asset)
             {
                 return false;
             }
@@ -57,7 +53,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             return true;
         }
 
-        internal static void Open(VicinityGraphAsset asset)
+        internal static void Open(ResidencyGraphAsset asset)
         {
             if (asset == null)
             {
@@ -70,8 +66,59 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             VicinityGraphWindow window = GetWindow<VicinityGraphWindow>();
             window.titleContent = new GUIContent(asset.name);
             window.minSize = new Vector2(720f, 480f);
-            window.Load(asset);
+            window.InitializeGraph(asset);
             window.Show();
+        }
+
+        #endregion
+
+        #region Unity API
+
+        /// <inheritdoc />
+        protected override void InitializeWindow(BaseGraph graph)
+        {
+            titleContent = new GUIContent(graph != null ? graph.name : "Residency Graph");
+
+            if (graphView == null)
+            {
+                graphView = new BaseGraphView(this);
+                graphView.Add(BuildToolbar());
+            }
+
+            StyleSheet style = AssetDatabase.LoadAssetAtPath<StyleSheet>(StylePath);
+
+            if (style != null && !rootView.styleSheets.Contains(style))
+            {
+                rootView.styleSheets.Add(style);
+            }
+
+            // The base window looks for the graph view among the root's children, so adding it is not
+            // optional: without this the window comes up empty with an error in the console.
+            graphView.style.flexGrow = 1f;
+            rootView.Add(graphView);
+
+            _status ??= BuildStatusLine();
+
+            // Adding an element that already has a parent moves it, which keeps the status line last
+            // however many times this window is rebuilt.
+            rootView.Add(_status);
+        }
+
+        /// <inheritdoc />
+        protected override void InitializeGraphView(BaseGraphView view)
+        {
+            view.initialized += RefreshPreview;
+
+            if (!_refreshScheduled)
+            {
+                _refreshScheduled = true;
+
+                // Adding or removing a node raises an event, but typing a number into one does not. A graph
+                // this small recompiles for nothing, so a steady refresh beats chasing every edit.
+                rootView.schedule.Execute(RefreshPreview).Every(RefreshMilliseconds);
+            }
+
+            RefreshPreview();
         }
 
         #endregion
@@ -81,68 +128,19 @@ namespace Nekuzaky.Vicinity.Editor.Graph
         private const string StylePath = "Packages/com.nekuzaky.vicinity/Editor/UI/VicinityGraph.uss";
         private const float DefaultSampleSize = 4f;
         private const float DefaultSampleMemory = 8f;
+        private const long RefreshMilliseconds = 250L;
 
-        [SerializeField] private VicinityGraphAsset m_asset;
         [SerializeField] private float m_sampleSize = DefaultSampleSize;
         [SerializeField] private float m_sampleMemory = DefaultSampleMemory;
         [SerializeField] private bool m_sampleTagMatch;
 
-        private VicinityGraphView _view;
         private Label _status;
-
-        private void Load(VicinityGraphAsset asset)
-        {
-            m_asset = asset;
-            Rebuild();
-        }
-
-        private void CreateGUI()
-        {
-            Rebuild();
-        }
-
-        private void Rebuild()
-        {
-            rootVisualElement.Clear();
-
-            if (m_asset == null)
-            {
-                rootVisualElement.Add(new Label("Open a Vicinity graph from the Project window."));
-                return;
-            }
-
-            StyleSheet style = AssetDatabase.LoadAssetAtPath<StyleSheet>(StylePath);
-
-            if (style != null)
-            {
-                rootVisualElement.styleSheets.Add(style);
-            }
-
-            rootVisualElement.Add(BuildToolbar());
-
-            _view = new VicinityGraphView(m_asset, typeof(ResidencyRuleNode));
-            _view.style.flexGrow = 1f;
-            _view.Changed += OnGraphChanged;
-
-            rootVisualElement.Add(_view);
-
-            _status = new Label(string.Empty);
-            _status.AddToClassList("vicinity-graph__status");
-            rootVisualElement.Add(_status);
-
-            OnGraphChanged();
-        }
+        private bool _refreshScheduled;
 
         private VisualElement BuildToolbar()
         {
             Toolbar toolbar = new Toolbar();
             toolbar.AddToClassList("vicinity-graph__toolbar");
-
-            Label name = new Label(m_asset.name);
-            name.AddToClassList("vicinity-graph__name");
-            toolbar.Add(name);
-
-            toolbar.Add(new ToolbarSpacer { flex = true });
 
             Label sample = new Label("Preview an object of");
             sample.AddToClassList("vicinity-graph__hint");
@@ -153,7 +151,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             size.RegisterValueChangedCallback(evt =>
             {
                 m_sampleSize = evt.newValue;
-                OnGraphChanged();
+                RefreshPreview();
             });
 
             toolbar.Add(size);
@@ -163,7 +161,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             memory.RegisterValueChangedCallback(evt =>
             {
                 m_sampleMemory = evt.newValue;
-                OnGraphChanged();
+                RefreshPreview();
             });
 
             toolbar.Add(memory);
@@ -172,43 +170,50 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             tagged.RegisterValueChangedCallback(evt =>
             {
                 m_sampleTagMatch = evt.newValue;
-                OnGraphChanged();
+                RefreshPreview();
             });
 
             toolbar.Add(tagged);
+            toolbar.Add(new ToolbarSpacer { flex = true });
             toolbar.Add(VicinityDocs.Link("Manual", DocPage.ResidencyGraph));
 
             return toolbar;
         }
 
-        private void OnGraphChanged()
+        private Label BuildStatusLine()
         {
-            if (_view == null || m_asset == null)
-            {
-                return;
-            }
+            _status = new Label(string.Empty);
+            _status.AddToClassList("vicinity-graph__status");
 
-            ObjectFacts facts = new ObjectFacts
+            return _status;
+        }
+
+        private ObjectFacts SampleFacts()
+        {
+            return new ObjectFacts
             {
                 SizeMeters = m_sampleSize,
                 MemoryMegabytes = m_sampleMemory,
                 TagMatch = m_sampleTagMatch ? 1f : 0f
             };
-
-            Dictionary<string, float> values = GraphPreview.Evaluate(m_asset, facts);
-            _view.RefreshPreviews(node => values.TryGetValue(node.Id, out float value) ? $"{value:0.##}" : string.Empty);
-
-            RefreshStatus();
         }
 
-        private void RefreshStatus()
+        private void RefreshPreview()
         {
-            if (m_asset is not ResidencyGraphAsset residency)
+            if (graph is not ResidencyGraphAsset residency || _status == null)
             {
-                _status.text = string.Empty;
                 return;
             }
 
+            // Running the preview leaves each node holding the value it would produce, which is what the
+            // canvas draws. The dictionary it returns is not needed here.
+            GraphPreview.Evaluate(residency, SampleFacts());
+
+            RefreshStatus(residency);
+        }
+
+        private void RefreshStatus(ResidencyGraphAsset residency)
+        {
             CompiledResidencyRules compiled = residency.Compile();
 
             if (compiled.IsValid)
@@ -220,14 +225,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
                     PriorityScale = 1f
                 };
 
-                ObjectFacts facts = new ObjectFacts
-                {
-                    SizeMeters = m_sampleSize,
-                    MemoryMegabytes = m_sampleMemory,
-                    TagMatch = m_sampleTagMatch ? 1f : 0f
-                };
-
-                ResolvedRule rule = compiled.Evaluate(facts, fallback);
+                ResolvedRule rule = compiled.Evaluate(SampleFacts(), fallback);
 
                 _status.RemoveFromClassList("vicinity-graph__status--broken");
                 _status.text =

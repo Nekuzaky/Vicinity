@@ -36,12 +36,12 @@ namespace Nekuzaky.Vicinity.Editor.Tests
 
             try
             {
-                int before = graph.Nodes.Count;
+                int before = graph.nodes.Count;
 
                 Assert.IsFalse(ResidencyGraphCreation.SeedIfEmpty(graph),
                     "seeding a graph that already has nodes would duplicate its output");
 
-                Assert.AreEqual(before, graph.Nodes.Count);
+                Assert.AreEqual(before, graph.nodes.Count);
             }
             finally
             {

@@ -1,20 +1,28 @@
 using System.Collections.Generic;
+using Nekuzaky.Vicinity.GraphProcessor;
 using Unity.Collections;
 using UnityEngine;
 
 namespace Nekuzaky.Vicinity.Graph
 {
+    /// <summary>
+    /// Turns a graph into the flat program the Burst job runs. Nothing here happens at runtime: a graph is
+    /// compiled once, and what the job sees afterwards is instructions and constants, never nodes.
+    /// </summary>
     internal sealed class RuleProgramBuilder
     {
         #region Main Methods
 
-        internal RuleProgramBuilder(VicinityGraphAsset graph)
+        internal RuleProgramBuilder(BaseGraph graph)
         {
-            _graph = graph;
-
-            foreach (NodeEdge edge in graph.Edges)
+            foreach (SerializableEdge edge in graph.edges)
             {
-                _incoming[EdgeKey(edge.ToNodeId, edge.ToPort)] = edge;
+                if (edge?.inputNode == null || edge.outputNode == null)
+                {
+                    continue;
+                }
+
+                _incoming[EdgeKey(edge.inputNode.GUID, edge.inputFieldName)] = edge;
             }
         }
 
@@ -30,19 +38,23 @@ namespace Nekuzaky.Vicinity.Graph
             return Emit(RuleOp.Constant, _constants.Count - 1);
         }
 
-        internal void Bind(VicinityNode node, int register)
+        internal void Bind(BaseNode node, int register)
         {
-            _registers[node.Id] = register;
+            _registers[node.GUID] = register;
         }
 
-        internal int InputRegister(VicinityNode node, string fieldName, float fallback)
+        /// <summary>
+        /// The register feeding one input of <paramref name="node"/>. An input nothing is wired into keeps
+        /// the value typed on the node, which is what makes a half-built graph still compile.
+        /// </summary>
+        internal int InputRegister(BaseNode node, string fieldName, float fallback)
         {
-            if (!_incoming.TryGetValue(EdgeKey(node.Id, fieldName), out NodeEdge edge))
+            if (!_incoming.TryGetValue(EdgeKey(node.GUID, fieldName), out SerializableEdge edge))
             {
                 return EmitConstant(fallback);
             }
 
-            return _registers.TryGetValue(edge.FromNodeId, out int register)
+            return _registers.TryGetValue(edge.outputNode.GUID, out int register)
                 ? register
                 : EmitConstant(fallback);
         }
@@ -73,11 +85,10 @@ namespace Nekuzaky.Vicinity.Graph
 
         #region Privates
 
-        private readonly VicinityGraphAsset _graph;
         private readonly List<RuleInstruction> _instructions = new List<RuleInstruction>();
         private readonly List<float> _constants = new List<float>();
         private readonly Dictionary<string, int> _registers = new Dictionary<string, int>();
-        private readonly Dictionary<string, NodeEdge> _incoming = new Dictionary<string, NodeEdge>();
+        private readonly Dictionary<string, SerializableEdge> _incoming = new Dictionary<string, SerializableEdge>();
 
         private static string EdgeKey(string nodeId, string port) => $"{nodeId}|{port}";
 
@@ -85,18 +96,16 @@ namespace Nekuzaky.Vicinity.Graph
     }
 
     /// <summary>
-    /// A graph that decides, per object, how close the player must be for it to load. Compiled once
-    /// into a flat program, then evaluated for every managed object without reflection.
+    /// A graph that decides, per object, how close the player must be for it to load. Compiled once into a
+    /// flat program, then evaluated for every managed object without reflection.
     /// </summary>
-    public sealed class ResidencyGraphAsset : VicinityGraphAsset
+    public sealed class ResidencyGraphAsset : BaseGraph
     {
         #region Main Methods
 
         /// <summary>Turns this graph into a program. Never throws; check the result before using it.</summary>
         public CompiledResidencyRules Compile()
         {
-            RemoveBrokenParts();
-
             if (!TryFindOutput(out ResidencyOutputNode output, out string outputProblem))
             {
                 return CompiledResidencyRules.Rejected(outputProblem);
@@ -117,7 +126,7 @@ namespace Nekuzaky.Vicinity.Graph
 
             RuleProgramBuilder builder = new RuleProgramBuilder(this);
 
-            foreach (VicinityNode node in executor.Order)
+            foreach (BaseNode node in executor.Order)
             {
                 if (node == output)
                 {
@@ -127,15 +136,15 @@ namespace Nekuzaky.Vicinity.Graph
                 if (node is not ResidencyRuleNode rule)
                 {
                     return CompiledResidencyRules.Rejected(
-                        $"'{node.Title}' does not belong in a residency graph.");
+                        $"'{node.name}' does not belong in a residency graph.");
                 }
 
                 builder.Bind(rule, rule.Emit(builder));
             }
 
-            int load = builder.InputRegister(output, "m_loadDistance", DefaultLoadDistance);
-            int release = builder.InputRegister(output, "m_releaseDistance", DefaultReleaseDistance);
-            int priority = builder.InputRegister(output, "m_priorityScale", DefaultPriorityScale);
+            int load = builder.InputRegister(output, ResidencyOutputNode.LoadField, DefaultLoadDistance);
+            int release = builder.InputRegister(output, ResidencyOutputNode.ReleaseField, DefaultReleaseDistance);
+            int priority = builder.InputRegister(output, ResidencyOutputNode.PriorityField, DefaultPriorityScale);
 
             return builder.Finish(load, release, priority, tag);
         }
@@ -144,19 +153,38 @@ namespace Nekuzaky.Vicinity.Graph
         public static ResidencyGraphAsset CreateStartingPoint()
         {
             ResidencyGraphAsset graph = CreateInstance<ResidencyGraphAsset>();
-
-            NumberNode loadDistance = new NumberNode { Value = DefaultLoadDistance, Position = new Vector2(-260f, -60f) };
-            NumberNode releaseDistance = new NumberNode { Value = DefaultReleaseDistance, Position = new Vector2(-260f, 40f) };
-            ResidencyOutputNode output = new ResidencyOutputNode { Position = new Vector2(60f, -10f) };
-
-            graph.Add(loadDistance);
-            graph.Add(releaseDistance);
-            graph.Add(output);
-
-            graph.Connect(loadDistance.Id, "m_result", output.Id, "m_loadDistance");
-            graph.Connect(releaseDistance.Id, "m_result", output.Id, "m_releaseDistance");
+            graph.Seed();
 
             return graph;
+        }
+
+        /// <summary>
+        /// Fills an empty graph with the nodes that reproduce Vicinity's built-in behaviour. Does nothing to a
+        /// graph that already holds something, so it is safe to call on one the user has built.
+        /// </summary>
+        public bool Seed()
+        {
+            if (nodes.Count > 0)
+            {
+                return false;
+            }
+
+            NumberNode loadDistance = BaseNode.CreateFromType<NumberNode>(new Vector2(-320f, -80f));
+            loadDistance.Value = DefaultLoadDistance;
+
+            NumberNode releaseDistance = BaseNode.CreateFromType<NumberNode>(new Vector2(-320f, 60f));
+            releaseDistance.Value = DefaultReleaseDistance;
+
+            ResidencyOutputNode output = BaseNode.CreateFromType<ResidencyOutputNode>(new Vector2(60f, -20f));
+
+            AddNode(loadDistance);
+            AddNode(releaseDistance);
+            AddNode(output);
+
+            Wire(loadDistance, ResultField, output, ResidencyOutputNode.LoadField);
+            Wire(releaseDistance, ResultField, output, ResidencyOutputNode.ReleaseField);
+
+            return true;
         }
 
         #endregion
@@ -166,13 +194,25 @@ namespace Nekuzaky.Vicinity.Graph
         private const float DefaultLoadDistance = ResidencySettings.DefaultLoadDistance;
         private const float DefaultReleaseDistance = ResidencySettings.DefaultUnloadDistance;
         private const float DefaultPriorityScale = 1f;
+        private const string ResultField = "m_result";
+
+        private void Wire(BaseNode from, string fromField, BaseNode to, string toField)
+        {
+            NodePort source = from.GetPort(fromField, null);
+            NodePort destination = to.GetPort(toField, null);
+
+            if (source != null && destination != null)
+            {
+                Connect(destination, source);
+            }
+        }
 
         private bool TryFindTag(out string tag, out string problem)
         {
             tag = string.Empty;
             problem = string.Empty;
 
-            foreach (VicinityNode node in Nodes)
+            foreach (BaseNode node in nodes)
             {
                 if (node is not ObjectTagNode tagNode || string.IsNullOrEmpty(tagNode.Tag))
                 {
@@ -200,7 +240,7 @@ namespace Nekuzaky.Vicinity.Graph
             output = null;
             int found = 0;
 
-            foreach (VicinityNode node in Nodes)
+            foreach (BaseNode node in nodes)
             {
                 if (node is ResidencyOutputNode candidate)
                 {

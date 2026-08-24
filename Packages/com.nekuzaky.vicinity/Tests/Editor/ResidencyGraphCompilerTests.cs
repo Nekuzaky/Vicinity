@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Nekuzaky.Vicinity.Graph;
+using Nekuzaky.Vicinity.GraphProcessor;
 using UnityEngine;
 
 namespace Nekuzaky.Vicinity.Editor.Tests
@@ -37,7 +38,7 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         public void AGraphWithoutAnOutputIsRejectedWithAnExplanation()
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
-            _graph.Add(new NumberNode { Value = 10f });
+            _graph.AddNode(Number(10f));
 
             _program = _graph.Compile();
 
@@ -49,8 +50,8 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         public void AGraphWithTwoOutputsIsRejected()
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
-            _graph.Add(new ResidencyOutputNode());
-            _graph.Add(new ResidencyOutputNode());
+            _graph.AddNode(Make<ResidencyOutputNode>());
+            _graph.AddNode(Make<ResidencyOutputNode>());
 
             _program = _graph.Compile();
 
@@ -63,16 +64,16 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            MathsNode first = new MathsNode { Operation = RuleMathOperation.Add };
-            MathsNode second = new MathsNode { Operation = RuleMathOperation.Add };
-            ResidencyOutputNode output = new ResidencyOutputNode();
+            MathsNode first = Maths(RuleMathOperation.Add);
+            MathsNode second = Maths(RuleMathOperation.Add);
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
 
-            _graph.Add(first);
-            _graph.Add(second);
-            _graph.Add(output);
+            _graph.AddNode(first);
+            _graph.AddNode(second);
+            _graph.AddNode(output);
 
-            _graph.Connect(first.Id, "m_result", second.Id, "m_left");
-            _graph.Connect(second.Id, "m_result", first.Id, "m_left");
+            Wire(_graph, first, "m_result", second, "m_left");
+            Wire(_graph, second, "m_result", first, "m_left");
 
             _program = _graph.Compile();
 
@@ -85,22 +86,22 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            ObjectSizeNode size = new ObjectSizeNode();
-            NumberNode factor = new NumberNode { Value = 8f };
-            MathsNode multiply = new MathsNode { Operation = RuleMathOperation.Multiply };
-            ClampNode clamp = new ClampNode();
-            ResidencyOutputNode output = new ResidencyOutputNode();
+            ObjectSizeNode size = Make<ObjectSizeNode>();
+            NumberNode factor = Number(8f);
+            MathsNode multiply = Maths(RuleMathOperation.Multiply);
+            ClampNode clamp = Make<ClampNode>();
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
 
-            _graph.Add(size);
-            _graph.Add(factor);
-            _graph.Add(multiply);
-            _graph.Add(clamp);
-            _graph.Add(output);
+            _graph.AddNode(size);
+            _graph.AddNode(factor);
+            _graph.AddNode(multiply);
+            _graph.AddNode(clamp);
+            _graph.AddNode(output);
 
-            _graph.Connect(size.Id, "m_meters", multiply.Id, "m_left");
-            _graph.Connect(factor.Id, "m_result", multiply.Id, "m_right");
-            _graph.Connect(multiply.Id, "m_result", clamp.Id, "m_value");
-            _graph.Connect(clamp.Id, "m_result", output.Id, "m_loadDistance");
+            Wire(_graph, size, "m_meters", multiply, "m_left");
+            Wire(_graph, factor, "m_result", multiply, "m_right");
+            Wire(_graph, multiply, "m_result", clamp, "m_value");
+            Wire(_graph, clamp, "m_result", output, "m_loadDistance");
 
             _program = _graph.Compile();
             Assert.IsTrue(_program.IsValid, _program.Problem);
@@ -126,22 +127,22 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            ObjectTagNode tag = new ObjectTagNode { Tag = "Hero" };
-            NumberNode near = new NumberNode { Value = 40f };
-            NumberNode far = new NumberNode { Value = 300f };
-            ChooseNode choose = new ChooseNode();
-            ResidencyOutputNode output = new ResidencyOutputNode();
+            ObjectTagNode tag = Tagged("Hero");
+            NumberNode near = Number(40f);
+            NumberNode far = Number(300f);
+            ChooseNode choose = Make<ChooseNode>();
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
 
-            _graph.Add(tag);
-            _graph.Add(near);
-            _graph.Add(far);
-            _graph.Add(choose);
-            _graph.Add(output);
+            _graph.AddNode(tag);
+            _graph.AddNode(near);
+            _graph.AddNode(far);
+            _graph.AddNode(choose);
+            _graph.AddNode(output);
 
-            _graph.Connect(tag.Id, "m_matches", choose.Id, "m_condition");
-            _graph.Connect(far.Id, "m_result", choose.Id, "m_then");
-            _graph.Connect(near.Id, "m_result", choose.Id, "m_otherwise");
-            _graph.Connect(choose.Id, "m_result", output.Id, "m_loadDistance");
+            Wire(_graph, tag, "m_matches", choose, "m_condition");
+            Wire(_graph, far, "m_result", choose, "m_then");
+            Wire(_graph, near, "m_result", choose, "m_otherwise");
+            Wire(_graph, choose, "m_result", output, "m_loadDistance");
 
             _program = _graph.Compile();
             Assert.IsTrue(_program.IsValid, _program.Problem);
@@ -155,16 +156,16 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            NumberNode load = new NumberNode { Value = 100f };
-            NumberNode release = new NumberNode { Value = 20f };
-            ResidencyOutputNode output = new ResidencyOutputNode();
+            NumberNode load = Number(100f);
+            NumberNode release = Number(20f);
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
 
-            _graph.Add(load);
-            _graph.Add(release);
-            _graph.Add(output);
+            _graph.AddNode(load);
+            _graph.AddNode(release);
+            _graph.AddNode(output);
 
-            _graph.Connect(load.Id, "m_result", output.Id, "m_loadDistance");
-            _graph.Connect(release.Id, "m_result", output.Id, "m_releaseDistance");
+            Wire(_graph, load, "m_result", output, "m_loadDistance");
+            Wire(_graph, release, "m_result", output, "m_releaseDistance");
 
             _program = _graph.Compile();
             ResolvedRule rule = _program.Evaluate(FactsFor(), Fallback);
@@ -178,19 +179,19 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            NumberNode numerator = new NumberNode { Value = 100f };
-            NumberNode zero = new NumberNode { Value = 0f };
-            MathsNode divide = new MathsNode { Operation = RuleMathOperation.Divide };
-            ResidencyOutputNode output = new ResidencyOutputNode();
+            NumberNode numerator = Number(100f);
+            NumberNode zero = Number(0f);
+            MathsNode divide = Maths(RuleMathOperation.Divide);
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
 
-            _graph.Add(numerator);
-            _graph.Add(zero);
-            _graph.Add(divide);
-            _graph.Add(output);
+            _graph.AddNode(numerator);
+            _graph.AddNode(zero);
+            _graph.AddNode(divide);
+            _graph.AddNode(output);
 
-            _graph.Connect(numerator.Id, "m_result", divide.Id, "m_left");
-            _graph.Connect(zero.Id, "m_result", divide.Id, "m_right");
-            _graph.Connect(divide.Id, "m_result", output.Id, "m_loadDistance");
+            Wire(_graph, numerator, "m_result", divide, "m_left");
+            Wire(_graph, zero, "m_result", divide, "m_right");
+            Wire(_graph, divide, "m_result", output, "m_loadDistance");
 
             _program = _graph.Compile();
             ResolvedRule rule = _program.Evaluate(FactsFor(), Fallback);
@@ -204,8 +205,8 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             _graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            ResidencyOutputNode output = new ResidencyOutputNode();
-            _graph.Add(output);
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
+            _graph.AddNode(output);
 
             _program = _graph.Compile();
 
@@ -251,24 +252,58 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             ResidencyGraphAsset graph = ScriptableObject.CreateInstance<ResidencyGraphAsset>();
 
-            ObjectSizeNode size = new ObjectSizeNode();
-            NumberNode multiplier = new NumberNode { Value = factor };
-            MathsNode multiply = new MathsNode { Operation = RuleMathOperation.Multiply };
-            ClampNode clamp = new ClampNode();
-            ResidencyOutputNode output = new ResidencyOutputNode();
+            ObjectSizeNode size = Make<ObjectSizeNode>();
+            NumberNode multiplier = Number(factor);
+            MathsNode multiply = Maths(RuleMathOperation.Multiply);
+            ClampNode clamp = Make<ClampNode>();
+            ResidencyOutputNode output = Make<ResidencyOutputNode>();
 
-            graph.Add(size);
-            graph.Add(multiplier);
-            graph.Add(multiply);
-            graph.Add(clamp);
-            graph.Add(output);
+            graph.AddNode(size);
+            graph.AddNode(multiplier);
+            graph.AddNode(multiply);
+            graph.AddNode(clamp);
+            graph.AddNode(output);
 
-            graph.Connect(size.Id, "m_meters", multiply.Id, "m_left");
-            graph.Connect(multiplier.Id, "m_result", multiply.Id, "m_right");
-            graph.Connect(multiply.Id, "m_result", clamp.Id, "m_value");
-            graph.Connect(clamp.Id, "m_result", output.Id, "m_loadDistance");
+            Wire(graph, size, "m_meters", multiply, "m_left");
+            Wire(graph, multiplier, "m_result", multiply, "m_right");
+            Wire(graph, multiply, "m_result", clamp, "m_value");
+            Wire(graph, clamp, "m_result", output, "m_loadDistance");
 
             return graph;
+        }
+
+        private static TNode Make<TNode>() where TNode : BaseNode
+        {
+            return BaseNode.CreateFromType<TNode>(Vector2.zero);
+        }
+
+        private static NumberNode Number(float value)
+        {
+            NumberNode node = Make<NumberNode>();
+            node.Value = value;
+
+            return node;
+        }
+
+        private static MathsNode Maths(RuleMathOperation operation)
+        {
+            MathsNode node = Make<MathsNode>();
+            node.Operation = operation;
+
+            return node;
+        }
+
+        private static ObjectTagNode Tagged(string tag)
+        {
+            ObjectTagNode node = Make<ObjectTagNode>();
+            node.Tag = tag;
+
+            return node;
+        }
+
+        private static void Wire(BaseGraph graph, BaseNode from, string fromField, BaseNode to, string toField)
+        {
+            graph.Connect(to.GetPort(toField, null), from.GetPort(fromField, null));
         }
     }
 }

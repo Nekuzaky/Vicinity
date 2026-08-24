@@ -2,6 +2,7 @@
     "name": "Nekuzaky.Vicinity",
     "rootNamespace": "Nekuzaky.Vicinity",
     "references": [
+        "Nekuzaky.Vicinity.NodeGraphProcessor",
         "Unity.Burst",
         "Unity.Collections",
         "Unity.Mathematics",

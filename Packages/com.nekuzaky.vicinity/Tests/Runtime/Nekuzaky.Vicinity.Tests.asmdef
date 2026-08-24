@@ -3,6 +3,7 @@
     "rootNamespace": "Nekuzaky.Vicinity.Tests",
     "references": [
         "Nekuzaky.Vicinity",
+        "Nekuzaky.Vicinity.NodeGraphProcessor",
         "Unity.Burst",
         "Unity.Collections",
         "Unity.Mathematics",

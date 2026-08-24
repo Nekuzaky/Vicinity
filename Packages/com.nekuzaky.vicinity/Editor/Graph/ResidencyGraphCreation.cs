@@ -1,6 +1,5 @@
 using Nekuzaky.Vicinity.Graph;
 using UnityEditor;
-using UnityEngine;
 
 namespace Nekuzaky.Vicinity.Editor.Graph
 {
@@ -36,30 +35,11 @@ namespace Nekuzaky.Vicinity.Editor.Graph
         /// Fills in a graph that has no nodes at all, so an empty asset opens as something the user can read
         /// and edit rather than as an error. Returns true when it changed something.
         /// </summary>
-        internal static bool SeedIfEmpty(VicinityGraphAsset asset)
+        internal static bool SeedIfEmpty(ResidencyGraphAsset graph)
         {
-            if (asset is not ResidencyGraphAsset graph || graph.Nodes.Count > 0)
+            if (graph == null || !graph.Seed())
             {
                 return false;
-            }
-
-            ResidencyGraphAsset template = ResidencyGraphAsset.CreateStartingPoint();
-
-            try
-            {
-                foreach (VicinityNode node in template.Nodes)
-                {
-                    graph.Add(node);
-                }
-
-                foreach (NodeEdge edge in template.Edges)
-                {
-                    graph.Connect(edge.FromNodeId, edge.FromPort, edge.ToNodeId, edge.ToPort);
-                }
-            }
-            finally
-            {
-                Object.DestroyImmediate(template);
             }
 
             EditorUtility.SetDirty(graph);

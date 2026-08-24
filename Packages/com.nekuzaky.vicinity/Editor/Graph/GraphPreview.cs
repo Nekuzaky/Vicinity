@@ -1,14 +1,21 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Nekuzaky.Vicinity.Graph;
+using Nekuzaky.Vicinity.GraphProcessor;
 
 namespace Nekuzaky.Vicinity.Editor.Graph
 {
+    /// <summary>
+    /// Runs a residency graph on a made-up object so the editor can show, on each node, the value it would
+    /// produce. This is the graph's own execution, not the compiled program the game runs — the two agree
+    /// because they read the same fields, and the status line under the canvas reports the compiled answer.
+    /// </summary>
     internal static class GraphPreview
     {
         #region Main Methods
 
-        internal static Dictionary<string, float> Evaluate(VicinityGraphAsset graph, ObjectFacts facts)
+        /// <summary>The value each node produces for an object with these facts, keyed by node GUID.</summary>
+        internal static Dictionary<string, float> Evaluate(BaseGraph graph, ObjectFacts facts)
         {
             Dictionary<string, float> values = new Dictionary<string, float>();
 
@@ -19,28 +26,25 @@ namespace Nekuzaky.Vicinity.Editor.Graph
 
             InjectFacts(graph, facts);
 
-            GraphExecutor executor = new GraphExecutor(graph);
+            new ProcessGraphProcessor(graph).Run();
 
-            if (executor.Execute() != GraphExecutionResult.Completed)
+            foreach (BaseNode node in graph.nodes)
             {
-                return values;
-            }
-
-            foreach (VicinityNode node in graph.Nodes)
-            {
-                if (TryReadFirstOutput(node, out float value))
+                if (node != null && TryReadFirstOutput(node, out float value))
                 {
-                    values[node.Id] = value;
+                    values[node.GUID] = value;
                 }
             }
 
             return values;
         }
 
-        internal static bool TryReadInput(VicinityNode node, string fieldName, out float value)
+        /// <summary>Reads one named field off a node, for the parts of the editor that need a single value.</summary>
+        internal static bool TryReadInput(BaseNode node, string fieldName, out float value)
         {
             value = 0f;
-            FieldInfo field = FindField(node.GetType(), fieldName);
+
+            FieldInfo field = node?.GetType().GetField(fieldName, Flags);
 
             if (field == null || field.FieldType != typeof(float))
             {
@@ -55,11 +59,11 @@ namespace Nekuzaky.Vicinity.Editor.Graph
 
         #region Privates
 
-        private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-        private static void InjectFacts(VicinityGraphAsset graph, ObjectFacts facts)
+        private static void InjectFacts(BaseGraph graph, ObjectFacts facts)
         {
-            foreach (VicinityNode node in graph.Nodes)
+            foreach (BaseNode node in graph.nodes)
             {
                 switch (node)
                 {
@@ -78,53 +82,25 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             }
         }
 
-        private static void Assign(VicinityNode node, string fieldName, float value)
+        private static void Assign(BaseNode node, string fieldName, float value)
         {
-            FieldInfo field = FindField(node.GetType(), fieldName);
-            field?.SetValue(node, value);
+            node.GetType().GetField(fieldName, Flags)?.SetValue(node, value);
         }
 
-        private static bool TryReadFirstOutput(VicinityNode node, out float value)
+        private static bool TryReadFirstOutput(BaseNode node, out float value)
         {
             value = 0f;
 
-            if (node is ResidencyOutputNode output)
+            foreach (NodePort port in node.outputPorts)
             {
-                value = output.LoadDistance;
-                return true;
-            }
-
-            NodePortLayout layout = NodePortLayout.For(node.GetType());
-
-            if (layout.Outputs.Count == 0)
-            {
-                return false;
-            }
-
-            NodePort port = layout.Outputs[0];
-
-            if (port.ValueType != typeof(float))
-            {
-                return false;
-            }
-
-            value = (float)port.Field.GetValue(node);
-            return true;
-        }
-
-        private static FieldInfo FindField(System.Type type, string fieldName)
-        {
-            for (System.Type current = type; current != null; current = current.BaseType)
-            {
-                FieldInfo field = current.GetField(fieldName, FieldFlags | BindingFlags.DeclaredOnly);
-
-                if (field != null)
+                if (port?.fieldInfo != null && port.fieldInfo.FieldType == typeof(float))
                 {
-                    return field;
+                    value = (float)port.fieldInfo.GetValue(node);
+                    return true;
                 }
             }
 
-            return null;
+            return false;
         }
 
         #endregion

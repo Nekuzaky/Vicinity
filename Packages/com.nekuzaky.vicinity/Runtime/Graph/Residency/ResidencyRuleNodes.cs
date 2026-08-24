@@ -1,28 +1,34 @@
 using System;
+using Nekuzaky.Vicinity.GraphProcessor;
 using UnityEngine;
 
 namespace Nekuzaky.Vicinity.Graph
 {
-    /// <summary>Base for every node that can live in a residency graph.</summary>
+    /// <summary>
+    /// Base for every node that can live in a residency graph. Beyond drawing itself in the editor, a rule
+    /// node knows how to compile itself into one instruction of a flat program, which is what lets the rules
+    /// run inside a Burst job rather than by walking the graph at runtime.
+    /// </summary>
     [Serializable]
-    public abstract class ResidencyRuleNode : VicinityNode
+    public abstract class ResidencyRuleNode : BaseNode
     {
         internal abstract int Emit(RuleProgramBuilder builder);
     }
 
     /// <summary>A fixed number you type in.</summary>
     [Serializable]
-    [GraphNodeMenu("Value/Number")]
+    [NodeMenuItem("Value/Number")]
     public sealed class NumberNode : ResidencyRuleNode
     {
         [SerializeField] private float m_value;
-        [SerializeField] [GraphOutput("Result")] private float m_result;
+
+        [Output("Result")]
+        [SerializeField]
+        [Tooltip("The number, in whatever unit the socket it feeds expects.")]
+        private float m_result;
 
         /// <inheritdoc />
-        public override string Title => "Number";
-
-        /// <inheritdoc />
-        public override string Summary => "A fixed number, in whatever unit the socket it feeds expects.";
+        public override string name => "Number";
 
         /// <summary>The number this node outputs.</summary>
         public float Value
@@ -32,77 +38,63 @@ namespace Nekuzaky.Vicinity.Graph
         }
 
         /// <inheritdoc />
-        public override void Process() => m_result = m_value;
+        protected override void Process() => m_result = m_value;
 
         internal override int Emit(RuleProgramBuilder builder) => builder.EmitConstant(m_value);
     }
 
     /// <summary>How large the object is, measured from what it draws.</summary>
     [Serializable]
-    [GraphNodeMenu("Object/Size")]
+    [NodeMenuItem("Object/Size")]
     public sealed class ObjectSizeNode : ResidencyRuleNode
     {
-        [SerializeField] [GraphOutput("Meters")] private float m_meters;
+        [Output("Meters")]
+        [SerializeField]
+        [Tooltip("How large this object is, in meters. Bigger things are usually worth loading from further away.")]
+        private float m_meters;
 
         /// <inheritdoc />
-        public override string Title => "Object Size";
-
-        /// <inheritdoc />
-        public override string Summary => "How large this object is, in meters. Bigger things are usually worth loading from further away.";
-
-        /// <inheritdoc />
-        public override void Process()
-        {
-        }
+        public override string name => "Object Size";
 
         internal override int Emit(RuleProgramBuilder builder) => builder.Emit(RuleOp.Size);
     }
 
     /// <summary>Roughly how much memory the object's models take.</summary>
     [Serializable]
-    [GraphNodeMenu("Object/Memory")]
+    [NodeMenuItem("Object/Memory")]
     public sealed class ObjectMemoryNode : ResidencyRuleNode
     {
-        [SerializeField] [GraphOutput("Megabytes")] private float m_megabytes;
+        [Output("Megabytes")]
+        [SerializeField]
+        [Tooltip("Roughly how much memory this object's models take, in megabytes.")]
+        private float m_megabytes;
 
         /// <inheritdoc />
-        public override string Title => "Object Memory";
-
-        /// <inheritdoc />
-        public override string Summary => "Roughly how much memory this object's models take, in megabytes.";
-
-        /// <inheritdoc />
-        public override void Process()
-        {
-        }
+        public override string name => "Object Memory";
 
         internal override int Emit(RuleProgramBuilder builder) => builder.Emit(RuleOp.Memory);
     }
 
     /// <summary>Whether the object carries a given tag.</summary>
     [Serializable]
-    [GraphNodeMenu("Object/Has Tag")]
+    [NodeMenuItem("Object/Has Tag")]
     public sealed class ObjectTagNode : ResidencyRuleNode
     {
         [SerializeField] private string m_tag = "Untagged";
-        [SerializeField] [GraphOutput("Matches")] private float m_matches;
+
+        [Output("Matches")]
+        [SerializeField]
+        [Tooltip("1 when the object carries this tag, 0 otherwise. Feed it into a Choose node.")]
+        private float m_matches;
 
         /// <inheritdoc />
-        public override string Title => "Has Tag";
-
-        /// <inheritdoc />
-        public override string Summary => "1 when the object carries this tag, 0 otherwise. Feed it into a Choose node.";
+        public override string name => "Has Tag";
 
         /// <summary>The tag this node looks for.</summary>
         public string Tag
         {
             get => m_tag;
             set => m_tag = value;
-        }
-
-        /// <inheritdoc />
-        public override void Process()
-        {
         }
 
         internal override int Emit(RuleProgramBuilder builder) => builder.Emit(RuleOp.TagMatch);
@@ -132,19 +124,17 @@ namespace Nekuzaky.Vicinity.Graph
 
     /// <summary>Combines two numbers.</summary>
     [Serializable]
-    [GraphNodeMenu("Maths/Maths")]
+    [NodeMenuItem("Maths/Maths")]
     public sealed class MathsNode : ResidencyRuleNode
     {
         [SerializeField] private RuleMathOperation m_operation = RuleMathOperation.Multiply;
-        [SerializeField] [GraphInput] private float m_left = 1f;
-        [SerializeField] [GraphInput] private float m_right = 1f;
-        [SerializeField] [GraphOutput("Result")] private float m_result;
+
+        [Input] [SerializeField] private float m_left = 1f;
+        [Input] [SerializeField] private float m_right = 1f;
+        [Output("Result")] [SerializeField] private float m_result;
 
         /// <inheritdoc />
-        public override string Title => m_operation.ToString();
-
-        /// <inheritdoc />
-        public override string Summary => "Combines two numbers.";
+        public override string name => m_operation.ToString();
 
         /// <summary>What this node does with its inputs.</summary>
         public RuleMathOperation Operation
@@ -154,7 +144,7 @@ namespace Nekuzaky.Vicinity.Graph
         }
 
         /// <inheritdoc />
-        public override void Process()
+        protected override void Process()
         {
             m_result = m_operation switch
             {
@@ -169,8 +159,8 @@ namespace Nekuzaky.Vicinity.Graph
 
         internal override int Emit(RuleProgramBuilder builder)
         {
-            int left = builder.InputRegister(this, "m_left", m_left);
-            int right = builder.InputRegister(this, "m_right", m_right);
+            int left = builder.InputRegister(this, nameof(m_left), m_left);
+            int right = builder.InputRegister(this, nameof(m_right), m_right);
 
             RuleOp op = m_operation switch
             {
@@ -188,28 +178,25 @@ namespace Nekuzaky.Vicinity.Graph
 
     /// <summary>Keeps a number inside a range.</summary>
     [Serializable]
-    [GraphNodeMenu("Maths/Keep Between")]
+    [NodeMenuItem("Maths/Keep Between")]
     public sealed class ClampNode : ResidencyRuleNode
     {
-        [SerializeField] [GraphInput] private float m_value;
-        [SerializeField] [GraphInput("Lowest")] private float m_lowest = 10f;
-        [SerializeField] [GraphInput("Highest")] private float m_highest = 500f;
-        [SerializeField] [GraphOutput("Result")] private float m_result;
+        [Input] [SerializeField] private float m_value;
+        [Input("Lowest")] [SerializeField] private float m_lowest = 10f;
+        [Input("Highest")] [SerializeField] private float m_highest = 500f;
+        [Output("Result")] [SerializeField] private float m_result;
 
         /// <inheritdoc />
-        public override string Title => "Keep Between";
+        public override string name => "Keep Between";
 
         /// <inheritdoc />
-        public override string Summary => "Stops a number from going below or above the bounds you set.";
-
-        /// <inheritdoc />
-        public override void Process() => m_result = Mathf.Clamp(m_value, m_lowest, m_highest);
+        protected override void Process() => m_result = Mathf.Clamp(m_value, m_lowest, m_highest);
 
         internal override int Emit(RuleProgramBuilder builder)
         {
-            int value = builder.InputRegister(this, "m_value", m_value);
-            int lowest = builder.InputRegister(this, "m_lowest", m_lowest);
-            int highest = builder.InputRegister(this, "m_highest", m_highest);
+            int value = builder.InputRegister(this, nameof(m_value), m_value);
+            int lowest = builder.InputRegister(this, nameof(m_lowest), m_lowest);
+            int highest = builder.InputRegister(this, nameof(m_highest), m_highest);
 
             return builder.Emit(RuleOp.Clamp, value, lowest, highest);
         }
@@ -227,19 +214,21 @@ namespace Nekuzaky.Vicinity.Graph
 
     /// <summary>Answers a yes or no question about two numbers.</summary>
     [Serializable]
-    [GraphNodeMenu("Logic/Compare")]
+    [NodeMenuItem("Logic/Compare")]
     public sealed class CompareNode : ResidencyRuleNode
     {
         [SerializeField] private RuleComparison m_comparison = RuleComparison.GreaterThan;
-        [SerializeField] [GraphInput] private float m_left;
-        [SerializeField] [GraphInput] private float m_right;
-        [SerializeField] [GraphOutput("Yes")] private float m_yes;
+
+        [Input] [SerializeField] private float m_left;
+        [Input] [SerializeField] private float m_right;
+
+        [Output("Yes")]
+        [SerializeField]
+        [Tooltip("1 when the comparison holds, 0 when it does not.")]
+        private float m_yes;
 
         /// <inheritdoc />
-        public override string Title => m_comparison == RuleComparison.GreaterThan ? "Is Greater" : "Is Less";
-
-        /// <inheritdoc />
-        public override string Summary => "Outputs 1 when the comparison holds, 0 when it does not.";
+        public override string name => m_comparison == RuleComparison.GreaterThan ? "Is Greater" : "Is Less";
 
         /// <summary>Which way the comparison runs.</summary>
         public RuleComparison Comparison
@@ -249,7 +238,7 @@ namespace Nekuzaky.Vicinity.Graph
         }
 
         /// <inheritdoc />
-        public override void Process()
+        protected override void Process()
         {
             bool holds = m_comparison == RuleComparison.GreaterThan ? m_left > m_right : m_left < m_right;
             m_yes = holds ? 1f : 0f;
@@ -257,8 +246,8 @@ namespace Nekuzaky.Vicinity.Graph
 
         internal override int Emit(RuleProgramBuilder builder)
         {
-            int left = builder.InputRegister(this, "m_left", m_left);
-            int right = builder.InputRegister(this, "m_right", m_right);
+            int left = builder.InputRegister(this, nameof(m_left), m_left);
+            int right = builder.InputRegister(this, nameof(m_right), m_right);
             RuleOp op = m_comparison == RuleComparison.GreaterThan ? RuleOp.Greater : RuleOp.Less;
 
             return builder.Emit(op, left, right);
@@ -267,28 +256,25 @@ namespace Nekuzaky.Vicinity.Graph
 
     /// <summary>Picks one of two numbers depending on a yes or no input.</summary>
     [Serializable]
-    [GraphNodeMenu("Logic/Choose")]
+    [NodeMenuItem("Logic/Choose")]
     public sealed class ChooseNode : ResidencyRuleNode
     {
-        [SerializeField] [GraphInput("When yes")] private float m_condition;
-        [SerializeField] [GraphInput("Then")] private float m_then = 1f;
-        [SerializeField] [GraphInput("Otherwise")] private float m_otherwise;
-        [SerializeField] [GraphOutput("Result")] private float m_result;
+        [Input("When yes")] [SerializeField] private float m_condition;
+        [Input("Then")] [SerializeField] private float m_then = 1f;
+        [Input("Otherwise")] [SerializeField] private float m_otherwise;
+        [Output("Result")] [SerializeField] private float m_result;
 
         /// <inheritdoc />
-        public override string Title => "Choose";
+        public override string name => "Choose";
 
         /// <inheritdoc />
-        public override string Summary => "Takes the first number when the condition holds, the second when it does not.";
-
-        /// <inheritdoc />
-        public override void Process() => m_result = m_condition > 0.5f ? m_then : m_otherwise;
+        protected override void Process() => m_result = m_condition > 0.5f ? m_then : m_otherwise;
 
         internal override int Emit(RuleProgramBuilder builder)
         {
-            int condition = builder.InputRegister(this, "m_condition", m_condition);
-            int then = builder.InputRegister(this, "m_then", m_then);
-            int otherwise = builder.InputRegister(this, "m_otherwise", m_otherwise);
+            int condition = builder.InputRegister(this, nameof(m_condition), m_condition);
+            int then = builder.InputRegister(this, nameof(m_then), m_then);
+            int otherwise = builder.InputRegister(this, nameof(m_otherwise), m_otherwise);
 
             return builder.Emit(RuleOp.Select, condition, then, otherwise);
         }
@@ -296,18 +282,23 @@ namespace Nekuzaky.Vicinity.Graph
 
     /// <summary>Where a residency graph ends. Exactly one per graph.</summary>
     [Serializable]
-    [GraphNodeMenu("Output/Residency Output")]
-    public sealed class ResidencyOutputNode : VicinityNode
+    [NodeMenuItem("Output/Residency Output")]
+    public sealed class ResidencyOutputNode : BaseNode
     {
-        [SerializeField] [GraphInput("Loads at")] private float m_loadDistance = ResidencySettings.DefaultLoadDistance;
-        [SerializeField] [GraphInput("Releases at")] private float m_releaseDistance = ResidencySettings.DefaultUnloadDistance;
-        [SerializeField] [GraphInput("Priority scale")] private float m_priorityScale = 1f;
+        [Input("Loads at")]
+        [SerializeField]
+        private float m_loadDistance = ResidencySettings.DefaultLoadDistance;
+
+        [Input("Releases at")]
+        [SerializeField]
+        private float m_releaseDistance = ResidencySettings.DefaultUnloadDistance;
+
+        [Input("Priority scale")]
+        [SerializeField]
+        private float m_priorityScale = 1f;
 
         /// <inheritdoc />
-        public override string Title => "Residency Output";
-
-        /// <inheritdoc />
-        public override string Summary => "The distances Vicinity will use for this object. Every graph needs exactly one.";
+        public override string name => "Residency Output";
 
         /// <summary>The loading distance this node resolved to, in meters.</summary>
         public float LoadDistance => m_loadDistance;
@@ -318,9 +309,13 @@ namespace Nekuzaky.Vicinity.Graph
         /// <summary>The priority multiplier this node resolved to.</summary>
         public float PriorityScale => m_priorityScale;
 
-        /// <inheritdoc />
-        public override void Process()
-        {
-        }
+        /// <summary>The field names of this node's three inputs, so the compiler names them in one place.</summary>
+        internal const string LoadField = nameof(m_loadDistance);
+
+        /// <inheritdoc cref="LoadField" />
+        internal const string ReleaseField = nameof(m_releaseDistance);
+
+        /// <inheritdoc cref="LoadField" />
+        internal const string PriorityField = nameof(m_priorityScale);
     }
 }

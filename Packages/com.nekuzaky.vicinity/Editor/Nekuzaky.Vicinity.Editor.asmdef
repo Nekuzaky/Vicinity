@@ -3,6 +3,8 @@
     "rootNamespace": "Nekuzaky.Vicinity.Editor",
     "references": [
         "Nekuzaky.Vicinity",
+        "Nekuzaky.Vicinity.NodeGraphProcessor",
+        "Nekuzaky.Vicinity.NodeGraphProcessor.Editor",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.GPUDriven.Runtime"

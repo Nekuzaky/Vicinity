@@ -12,8 +12,89 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f102a6c6f5769f046b5222481cbd89cc, type: 3}
   m_Name: Residency Graph
   m_EditorClassIdentifier: Nekuzaky.Vicinity::Nekuzaky.Vicinity.Graph.ResidencyGraphAsset
-  m_nodes: []
-  m_edges: []
+  serializedNodes: []
+  nodes:
+  - rid: 1301450696725626880
+  - rid: 1301450696725626881
+  - rid: 1301450696725626882
+  edges:
+  - GUID: 02c1e599-5164-48b0-80c2-8c2643f02c4e
+    owner: {fileID: 11400000}
+    inputNodeGUID: 911f2de0-7561-4eaa-9e73-34b3c40a44a7
+    outputNodeGUID: e4bda31f-497f-461c-8c4e-51bb875880fa
+    inputFieldName: m_loadDistance
+    outputFieldName: m_result
+    inputPortIdentifier: 
+    outputPortIdentifier: 
+  - GUID: f353b70e-55e8-41f6-8da7-019e0c63a2d9
+    owner: {fileID: 11400000}
+    inputNodeGUID: 911f2de0-7561-4eaa-9e73-34b3c40a44a7
+    outputNodeGUID: ed1072d5-e83f-46be-9eca-d9a2072a518b
+    inputFieldName: m_releaseDistance
+    outputFieldName: m_result
+    inputPortIdentifier: 
+    outputPortIdentifier: 
+  groups: []
+  stackNodes: []
+  pinnedElements: []
+  exposedParameters: []
+  serializedParameterList: []
+  stickyNotes: []
+  nodeInspectorReference: {fileID: 0}
+  position: {x: 0, y: 0, z: 0}
+  scale: {x: 1, y: 1, z: 1}
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 1301450696725626880
+      type: {class: NumberNode, ns: Nekuzaky.Vicinity.Graph, asm: Nekuzaky.Vicinity}
+      data:
+        nodeCustomName: 
+        GUID: e4bda31f-497f-461c-8c4e-51bb875880fa
+        computeOrder: -1
+        position:
+          serializedVersion: 2
+          x: -320
+          y: -80
+          width: 100
+          height: 100
+        expanded: 0
+        debug: 0
+        nodeLock: 0
+        m_value: 60
+        m_result: 0
+    - rid: 1301450696725626881
+      type: {class: NumberNode, ns: Nekuzaky.Vicinity.Graph, asm: Nekuzaky.Vicinity}
+      data:
+        nodeCustomName: 
+        GUID: ed1072d5-e83f-46be-9eca-d9a2072a518b
+        computeOrder: -1
+        position:
+          serializedVersion: 2
+          x: -320
+          y: 60
+          width: 100
+          height: 100
+        expanded: 0
+        debug: 0
+        nodeLock: 0
+        m_value: 85
+        m_result: 0
+    - rid: 1301450696725626882
+      type: {class: ResidencyOutputNode, ns: Nekuzaky.Vicinity.Graph, asm: Nekuzaky.Vicinity}
+      data:
+        nodeCustomName: 
+        GUID: 911f2de0-7561-4eaa-9e73-34b3c40a44a7
+        computeOrder: -1
+        position:
+          serializedVersion: 2
+          x: 60
+          y: -20
+          width: 100
+          height: 100
+        expanded: 0
+        debug: 0
+        nodeLock: 0
+        m_loadDistance: 60
+        m_releaseDistance: 85
+        m_priorityScale: 1

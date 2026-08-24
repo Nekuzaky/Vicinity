@@ -18,7 +18,18 @@ For commercial use, a licence is available through the Unity Asset Store.
 
 ## Third-party content
 
-Vicinity ships no third-party code, fonts, artwork or audio. It builds on the Unity Editor and engine APIs and on official Unity packages ([listed under Installation](Installation)), and carries its own assembly definitions so it never leaks into your own assemblies.
+Vicinity ships one third-party component, and no fonts, artwork or audio.
+
+| Component | Author | Licence | Used for |
+| :--- | :--- | :--- | :--- |
+| [NodeGraphProcessor](https://github.com/alelievr/NodeGraphProcessor) 1.3.1 | Antoine Lelievre | MIT | The canvas behind the [Residency Graph](Residency-Graph) |
+
+Its licence travels with the package at `ThirdParty/NodeGraphProcessor/LICENSE.md`, and the full notice — including the two mechanical changes made to it — is in `THIRD-PARTY-NOTICES.md`. MIT permits this use, including commercially.
+
+> [!NOTE]
+> Only the **editor** comes from that library. Vicinity does not use its runtime graph traversal: a residency graph is compiled once into a flat instruction program that runs inside a Burst job, so no node is visited while your game plays.
+
+Beyond that, Vicinity builds on the Unity Editor and engine APIs and on official Unity packages ([listed under Installation](Installation)), and carries its own assembly definitions so it never leaks into your own assemblies.
 
 ---
 
