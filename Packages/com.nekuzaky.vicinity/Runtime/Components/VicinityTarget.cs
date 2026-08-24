@@ -33,6 +33,7 @@ namespace Nekuzaky.Vicinity
         {
             _previousPosition = transform.position;
             _velocity = Vector3.zero;
+            _cameraSearched = false;
             VicinityTargetRegistry.Add(this);
         }
 
@@ -54,15 +55,22 @@ namespace Nekuzaky.Vicinity
         /// <summary>True when objects in view should be loaded before objects behind the player.</summary>
         public bool PrioritisesWhatTheCameraSees => m_prioritiseWhatTheCameraSees;
 
-        /// <summary>The camera used for the view test, when there is one on this object or below it.</summary>
+        /// <summary>
+        /// The camera used for the view test, when there is one on this object or below it. Looked up once
+        /// per enable: a miss is remembered, because a search that fails is the expensive one and this is
+        /// read every frame. A camera added later is picked up when the target is next enabled.
+        /// </summary>
         public Camera ViewCamera
         {
             get
             {
-                if (_camera == null)
+                if (_cameraSearched)
                 {
-                    _camera = GetComponent<Camera>();
+                    return _camera;
                 }
+
+                _cameraSearched = true;
+                _camera = GetComponentInChildren<Camera>();
 
                 return _camera;
             }
@@ -106,6 +114,7 @@ namespace Nekuzaky.Vicinity
         private Vector3 _previousPosition;
         private Vector3 _velocity;
         private Camera _camera;
+        private bool _cameraSearched;
 
         #endregion
     }

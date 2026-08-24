@@ -9,6 +9,38 @@ Distant objects are never loaded at all. They load as the player approaches, and
 
 ---
 
+## Is this for you?
+
+Vicinity solves exactly one problem: **your level holds more asset than your memory budget allows.**
+
+It is worth adopting when:
+
+- you are building an open world, a large level, or anything with long sight lines,
+- you ship to a console or a phone with a memory ceiling you actually hit,
+- your artists are being asked to downgrade source assets to fit the budget.
+
+It is **not** worth adopting when:
+
+- your scenes already fit comfortably in memory — Vicinity then costs a step and buys nothing,
+- your problem is frame rate rather than memory. That is `LODGroup`, culling and draw calls, not this.
+
+> [!IMPORTANT]
+> Vicinity does not make anything look better. It makes it *affordable to keep things looking good further away*, by not paying for what the player cannot see yet.
+
+### What it changes for an artist
+
+The usual conversation is *"your 4K rock blows the budget, halve the textures."* That rock costs the same memory at 800 m as at 3 m, which is what forces the downgrade in the first place.
+
+With Vicinity it is only in memory when someone is close enough to look at it. Same budget, far more detail across the level. On top of that, an artist working in a Vicinity scene:
+
+- drags a model into the scene and it streams — no ticket, no waiting on a programmer,
+- sees the distances as two rings on the ground, draggable, in meters,
+- cannot set them wrongly: the margin that stops an object flickering is enforced by the engine, and anything invalid is flagged with a button that repairs it.
+
+There is no new habit to learn: in a Vicinity scene, dragging a model in from the Project window already gives a managed object. See **[Prefabs and Models](Prefabs-And-Models)**.
+
+---
+
 ## Documentation
 
 | Page | What you'll find |

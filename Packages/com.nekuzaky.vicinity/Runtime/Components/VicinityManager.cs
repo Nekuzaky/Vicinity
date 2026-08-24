@@ -249,6 +249,7 @@ namespace Nekuzaky.Vicinity
         private AssetProviderRegistry _providers;
         private ResidencySettings _settings;
         private Camera[] _cameraBuffer;
+        private Camera _fallbackCamera;
         private bool _tagsUsable = true;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -503,9 +504,17 @@ namespace Nekuzaky.Vicinity
 
         private Camera FindFallbackCamera()
         {
+            // This runs every frame whenever the viewpoint carries no camera of its own, so the scan is
+            // kept for the moment the cached one actually stops being usable.
+            if (_fallbackCamera != null && _fallbackCamera.isActiveAndEnabled)
+            {
+                return _fallbackCamera;
+            }
+
             int count = Camera.allCamerasCount;
             if (count == 0)
             {
+                _fallbackCamera = null;
                 return null;
             }
 
@@ -521,10 +530,12 @@ namespace Nekuzaky.Vicinity
                 Camera candidate = _cameraBuffer[i];
                 if (candidate != null && candidate.isActiveAndEnabled)
                 {
+                    _fallbackCamera = candidate;
                     return candidate;
                 }
             }
 
+            _fallbackCamera = null;
             return null;
         }
 

@@ -6,12 +6,14 @@ Two ways in, depending on what you have: a library of prefabs, or a scene alread
 
 ## Start from a prefab
 
-1. Open **Tools ▸ Vicinity ▸ Dashboard**.
-2. Drag a prefab — or an imported model, or a whole folder — onto the drop zone at the top.
-3. A new prefab appears beside the original, named `<name> (Vicinity)`.
-4. Place **that one** in your scene instead of the original.
+1. Open **Tools ▸ Vicinity ▸ Dashboard**, and click **Set up this scene** once so the scene has a manager.
+2. Drag a model from the Project window into the Scene view, as you always have.
 
-That is the whole setup. The new prefab already knows how big the model is, how much memory it takes, how close the player must be before it loads, and how far away it is released.
+It lands as a managed object. Vicinity made a `<name> (Vicinity)` prefab beside the original the first time, and reuses it from then on.
+
+That is the whole setup. It already knows how big the model is, how much memory it takes, how close the player must be before it loads, and how far away it is released.
+
+Preparing a whole library at once, before anyone opens a level? Drag prefabs, models or a folder onto the drop zone at the top of the dashboard. That converts without placing.
 
 > [!TIP]
 > Vicinity works out the loading distance from the object's real size, so a cathedral loads from much further away than a crate — without you typing a number.

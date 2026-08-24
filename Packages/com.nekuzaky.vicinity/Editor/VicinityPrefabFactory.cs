@@ -132,6 +132,35 @@ namespace Nekuzaky.Vicinity.Editor
         }
 
         /// <summary>
+        /// The managed prefab standing in for <paramref name="sourcePrefab"/>, converting it only if one does
+        /// not exist yet. Meant for paths that run on every drop, where re-measuring an asset that was already
+        /// taken over would be wasted work and would touch the user's prefab for nothing.
+        /// </summary>
+        internal static PrefabConversion Ensure(GameObject sourcePrefab)
+        {
+            if (!CanConvert(sourcePrefab, out string reason))
+            {
+                return new PrefabConversion { Source = sourcePrefab, Problem = reason };
+            }
+
+            string resultPath = ResultPathFor(AssetDatabase.GetAssetPath(sourcePrefab));
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(resultPath);
+
+            if (existing == null || existing.GetComponent<VicinityObject>() == null)
+            {
+                return Convert(sourcePrefab);
+            }
+
+            return new PrefabConversion
+            {
+                Source = sourcePrefab,
+                Result = existing,
+                ResultPath = resultPath,
+                ReplacedExisting = true
+            };
+        }
+
+        /// <summary>
         /// How far away an object of this size should start loading. Bigger things are noticed from further
         /// away, so they are given more room; the result is rounded so it reads as an authored number rather
         /// than a computed one.

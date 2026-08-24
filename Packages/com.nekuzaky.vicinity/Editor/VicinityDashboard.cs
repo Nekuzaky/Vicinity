@@ -45,9 +45,18 @@ namespace Nekuzaky.Vicinity.Editor
                 _tabs[i].clicked += () => SelectTab(index);
             }
 
+            BuildDocsLink();
+
             Toggle gizmoToggle = rootVisualElement.Q<Toggle>("gizmo-toggle");
             gizmoToggle.SetValueWithoutNotify(VicinityEditorStyles.GizmosVisible);
             gizmoToggle.RegisterValueChangedCallback(OnGizmoToggleChanged);
+
+            Toggle sceneDropToggle = rootVisualElement.Q<Toggle>("scene-drop-toggle");
+            sceneDropToggle.tooltip =
+                "Drag a model from the Project window into a scene that has a Vicinity Manager, and it is placed as a managed object. Without this you place the model as it is.";
+
+            sceneDropToggle.SetValueWithoutNotify(VicinitySceneDropHandler.Enabled);
+            sceneDropToggle.RegisterValueChangedCallback(static evt => VicinitySceneDropHandler.Enabled = evt.newValue);
 
             BuildFooter();
             SelectTab(_activeTab);
@@ -118,6 +127,22 @@ namespace Nekuzaky.Vicinity.Editor
         private Label _liveExclusions;
         private readonly Dictionary<string, Label> _liveValues = new Dictionary<string, Label>();
         private readonly List<ResidencySample> _samples = new List<ResidencySample>();
+
+        private void BuildDocsLink()
+        {
+            VisualElement tabBar = rootVisualElement.Q<VisualElement>("tab-bar");
+
+            if (tabBar == null)
+            {
+                return;
+            }
+
+            VisualElement spacer = new VisualElement();
+            spacer.style.flexGrow = 1f;
+
+            tabBar.Add(spacer);
+            tabBar.Add(VicinityDocs.Link("Documentation", DocPage.Home));
+        }
 
         private void BuildFooter()
         {
@@ -836,6 +861,10 @@ namespace Nekuzaky.Vicinity.Editor
             text.Add(detail);
 
             row.Add(text);
+
+            // The page this opens is the one that explains the whole trade-off, so it belongs
+            // exactly here, next to the warning that raises the question.
+            row.Add(VicinityDocs.Link("Why?", DocPage.AssetSources));
 
             Button install = new Button(static () => UnityEditor.PackageManager.UI.Window.Open("com.unity.addressables"))
             {

@@ -176,6 +176,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             });
 
             toolbar.Add(tagged);
+            toolbar.Add(VicinityDocs.Link("Manual", DocPage.ResidencyGraph));
 
             return toolbar;
         }

@@ -14,6 +14,13 @@ leaves the question of which mesh is drawn to `LODGroup` and Mesh LOD.
 
 **Setting a scene up without writing code**
 
+- Dragging a model from the Project window into the Scene view places it as a managed object, in any
+  scene that has a manager. The prefab standing in for it is made on the first drop and reused after,
+  so nothing is remade per object. Anything Vicinity cannot take over is placed untouched, a notice in
+  the Scene view says what happened, and one undo takes it back. Turned off per user with **Take over
+  what I drop into the scene** in the dashboard header.
+- Links to the online manual from the dashboard, the graph window, the Vicinity Object inspector, the
+  Addressables warning, and the package entry in Package Manager.
 - A drop zone at the top of the dashboard. Drag prefabs or imported 3D models onto it — one, several, or a whole folder —
   and each comes back as `<name> (Vicinity).prefab` beside the original, measured, and given a
   loading distance derived from its size. Dropping the same prefab again re-measures it and leaves
@@ -33,6 +40,17 @@ leaves the question of which mesh is drawn to `LODGroup` and Mesh LOD.
 - Scene view gizmos drawn as ground rings rather than filled spheres, coloured by state in Play
   Mode, with draggable handles showing the distance in meters while dragging. A single toggle in
   the dashboard hides all of them.
+
+**Performance**
+
+- No coroutines anywhere in the shipped code. Loading is built on `Awaitable` and
+  `Object.InstantiateAsync`, and evaluation is time-based rather than frame-based.
+- The evaluation loop allocates nothing that scales with the scene, verified by a test that measures
+  GC allocation per frame through the profiler rather than asserting it in prose.
+- The viewpoint's camera is looked up once per enable instead of on every frame. A viewpoint carrying
+  no camera used to pay for a failed `GetComponent` every frame, which is the expensive case.
+- The fallback camera is remembered until it stops being usable, instead of scanning every camera in
+  the scene each frame whenever the viewpoint carries none.
 
 **Components**
 

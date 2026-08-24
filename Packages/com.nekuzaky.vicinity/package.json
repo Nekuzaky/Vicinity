@@ -29,6 +29,7 @@
     "urp",
     "level design"
   ],
+  "documentationUrl": "https://nekuzaky.com/docs/vicinity",
   "licensesUrl": "https://github.com/Nekuzaky/Vicinity/blob/main/Packages/com.nekuzaky.vicinity/LICENSE.md",
-  "changelogUrl": "https://github.com/Nekuzaky/Vicinity/blob/main/Packages/com.nekuzaky.vicinity/CHANGELOG.md"
+  "changelogUrl": "https://nekuzaky.com/docs/vicinity/changelog"
 }

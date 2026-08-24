@@ -4,6 +4,7 @@
             <ui:Label name="title" text="Vicinity" class="vicinity-title" />
             <ui:Label name="subtitle" text="Keeps distant assets out of memory." class="vicinity-subtitle" />
             <ui:Toggle name="gizmo-toggle" label="Show rings in the scene view" class="vicinity-gizmo-toggle" />
+            <ui:Toggle name="scene-drop-toggle" label="Take over what I drop into the scene" class="vicinity-gizmo-toggle" />
         </ui:VisualElement>
 
         <ui:VisualElement name="tab-bar" class="vicinity-tab-bar">

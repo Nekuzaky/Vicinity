@@ -131,6 +131,42 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         }
 
         [Test]
+        public void DroppingTheSameModelTwiceReusesWhatWasAlreadyMade()
+        {
+            EnsureFolder();
+
+            string sourcePath = FolderPath + "/Barrel.prefab";
+            GameObject authored = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            PrefabConversion first = null;
+
+            try
+            {
+                GameObject source = PrefabUtility.SaveAsPrefabAsset(authored, sourcePath);
+
+                first = VicinityPrefabFactory.Ensure(source);
+                Assert.IsTrue(first.Succeeded, first.Problem);
+                Assert.IsFalse(first.ReplacedExisting, "nothing existed yet, so this one had to be made");
+
+                PrefabConversion second = VicinityPrefabFactory.Ensure(source);
+
+                Assert.IsTrue(second.Succeeded, second.Problem);
+                Assert.IsTrue(second.ReplacedExisting, "the second drop must reuse the prefab, not remake it");
+                Assert.AreEqual(first.Result, second.Result);
+            }
+            finally
+            {
+                Object.DestroyImmediate(authored);
+
+                if (first != null && first.ResultPath != null)
+                {
+                    AssetDatabase.DeleteAsset(first.ResultPath);
+                }
+
+                AssetDatabase.DeleteAsset(sourcePath);
+            }
+        }
+
+        [Test]
         public void AModelWithATurnedRootIsNotTippedOver()
         {
             EnsureFolder();

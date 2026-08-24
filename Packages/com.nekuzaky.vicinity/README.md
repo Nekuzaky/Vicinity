@@ -101,6 +101,16 @@ Both cases are verified on every release.
 Tools > Vicinity > Dashboard
 ```
 
+### Drag a model into the scene
+
+In a scene that has a manager, dragging a model from the Project window into the Scene view places it
+as a managed object. Nothing else to do, and no new habit for an artist to learn — the `(Vicinity)`
+prefab is made on the first drop and reused after.
+
+Anything Vicinity cannot take over is placed untouched. A notice in the Scene view says what happened,
+and one undo takes it back. **Take over what I drop into the scene** in the dashboard header turns it
+off, per user.
+
 ### Drop a prefab in
 
 The dashboard opens on a drop zone. Drag a prefab **or an imported 3D model** onto it — `.fbx`,

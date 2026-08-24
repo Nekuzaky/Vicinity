@@ -1,6 +1,35 @@
 # Prefabs and Models
 
-The drop zone at the top of the dashboard turns an ordinary asset into one Vicinity manages. It is the shortest path from a model to a streaming object.
+Two ways to hand an asset to Vicinity: drop it straight into the scene, or drop it on the dashboard.
+
+---
+
+## Dropping straight into the scene
+
+In a scene that has a **Vicinity Manager**, drag a model from the Project window into the Scene view and it lands as a managed object. Nothing else to do.
+
+Behind that, Vicinity makes the `<name> (Vicinity)` prefab the first time and reuses it afterwards, so a hundred trees dropped one by one all share the same one.
+
+| Dragged in | What lands |
+| :--- | :--- |
+| A model or prefab, in a Vicinity scene | A managed object |
+| Something that draws nothing | Placed as it is, untouched |
+| A prefab Vicinity already manages | Placed as it is — it is already done |
+| Anything, in a scene with no manager | Placed as it is |
+
+A short notice appears in the Scene view saying what happened. Undo takes it back in one step.
+
+> [!TIP]
+> This is what makes Vicinity invisible to an artist: they keep dragging models into the level exactly as before. Turn it off with **Take over what I drop into the scene** in the dashboard header — it is a per-user setting, so it never changes what a teammate sees.
+
+> [!NOTE]
+> The manager is the signal. A scene without one is not a streaming scene, so Vicinity stays out of the way entirely.
+
+---
+
+## Dropping on the dashboard
+
+The drop zone at the top of the dashboard converts assets without placing them — the right tool for preparing a library in bulk, before anyone opens a level.
 
 ---
 
@@ -36,7 +65,7 @@ The loading distance grows with the object's real size and is clamped at both en
 
 A new prefab, beside the original, carrying a **[Vicinity Object](Reference#vicinity-object)** and nothing else. It draws nothing of its own: the model appears only once the player is close enough.
 
-Place that prefab in your scene **instead of** the original. Keep the original where it is — the new one points at it.
+When you convert from the dashboard, place that prefab in your scene **instead of** the original. Dropping into the Scene view does this for you. Either way, keep the original where it is — the new one points at it.
 
 > [!NOTE]
 > Because the produced prefab draws nothing, it remembers how big the model it stands for is. Rules that ask about size in a **[Residency Graph](Residency-Graph)** therefore still judge it correctly.

@@ -116,3 +116,19 @@
     border-color: rgb(92, 168, 118);
     border-width: 2px;
 }
+
+.vicinity-doc-link {
+    height: 18px;
+    margin-left: 6px;
+    padding: 0 8px 0 8px;
+    border-radius: 3px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    font-size: 11px;
+    color: rgb(139, 145, 151);
+}
+
+.vicinity-doc-link:hover {
+    background-color: rgb(52, 55, 61);
+    color: rgb(90, 156, 242);
+}

@@ -6,6 +6,7 @@
         "Unity.Burst",
         "Unity.Collections",
         "Unity.Mathematics",
+        "Unity.Profiling.Core",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

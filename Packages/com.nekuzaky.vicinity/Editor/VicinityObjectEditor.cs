@@ -26,6 +26,8 @@ namespace Nekuzaky.Vicinity.Editor
                 "What sits here in the scene is the lightweight stand-in. The models below are loaded as the player comes closer, and released when they walk away.",
                 MessageType.None);
 
+            VicinityDocs.DrawInspectorLink("How distances work", DocPage.DistancesAndSteps);
+
             DrawQualitySteps();
             DrawMissingModelWarning();
             DrawOrderWarning();
