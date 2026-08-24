@@ -83,6 +83,10 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             {
                 graphView = new BaseGraphView(this);
                 graphView.Add(BuildToolbar());
+
+                // Groups and sticky notes are in the canvas' own context menu; the minimap is not, and
+                // has to be asked for.
+                graphView.Add(new MiniMapView(graphView));
             }
 
             StyleSheet style = AssetDatabase.LoadAssetAtPath<StyleSheet>(StylePath);

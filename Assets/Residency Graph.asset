@@ -51,7 +51,7 @@ MonoBehaviour:
       data:
         nodeCustomName: 
         GUID: e4bda31f-497f-461c-8c4e-51bb875880fa
-        computeOrder: -1
+        computeOrder: 0
         position:
           serializedVersion: 2
           x: -320
@@ -62,13 +62,13 @@ MonoBehaviour:
         debug: 0
         nodeLock: 0
         m_value: 60
-        m_result: 0
+        m_result: 60
     - rid: 1301450696725626881
       type: {class: NumberNode, ns: Nekuzaky.Vicinity.Graph, asm: Nekuzaky.Vicinity}
       data:
         nodeCustomName: 
         GUID: ed1072d5-e83f-46be-9eca-d9a2072a518b
-        computeOrder: -1
+        computeOrder: 1
         position:
           serializedVersion: 2
           x: -320
@@ -79,13 +79,13 @@ MonoBehaviour:
         debug: 0
         nodeLock: 0
         m_value: 85
-        m_result: 0
+        m_result: 85
     - rid: 1301450696725626882
       type: {class: ResidencyOutputNode, ns: Nekuzaky.Vicinity.Graph, asm: Nekuzaky.Vicinity}
       data:
         nodeCustomName: 
         GUID: 911f2de0-7561-4eaa-9e73-34b3c40a44a7
-        computeOrder: -1
+        computeOrder: 2
         position:
           serializedVersion: 2
           x: 60

@@ -46,7 +46,9 @@ leaves the question of which mesh is drawn to `LODGroup` and Mesh LOD.
 - The residency graph editor is built on NodeGraphProcessor 1.3.1 by Antoine Lelievre, included
   under MIT at `ThirdParty/NodeGraphProcessor/`. It brings groups, sticky notes, a minimap, relay
   nodes and copy-paste between graphs. Its namespace and assemblies are renamed under `Nekuzaky.`,
-  so a project that also installs it from OpenUPM does not collide.
+  so a project that also installs it from OpenUPM does not collide. Groups and sticky notes come from
+  the canvas context menu; the minimap is added by Vicinity, since the library does not show it by
+  default.
 - Only the editing side comes from that library. A graph is still compiled once into a flat
   instruction program evaluated inside a Burst job, so no node is visited while the game plays.
 

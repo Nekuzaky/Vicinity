@@ -41,7 +41,16 @@ Double-click it, or use **Tools ▸ Vicinity ▸ Residency Graph**. Assign it to
 | **Logic** | Choose | Picks between two values based on a condition |
 | **Output** | Residency Output | Loading distance, releasing distance, priority |
 
-Right-click the canvas to add a node. Drag from one port to another to connect them. The canvas also gives you groups, sticky notes, a minimap, relay nodes and copy-paste between graphs.
+Drag from one port to another to connect them. To add a node, right-click the canvas and choose **Create Node**, or press **Space**.
+
+## Working on the canvas
+
+| Right-click gives you | What it is for |
+| :--- | :--- |
+| **Create Group** | Boxes a set of nodes together, and moves them as one |
+| **Create Sticky Note** | Leaves a note for whoever opens the graph next |
+
+A **minimap** sits in the corner for graphs too large to see at once, and nodes copy and paste between graphs.
 
 > [!NOTE]
 > The editor is built on [NodeGraphProcessor](https://github.com/alelievr/NodeGraphProcessor) by Antoine Lelievre, included under MIT — see [License](License). Only the editing side comes from it; what runs in your game is the compiled program described below.

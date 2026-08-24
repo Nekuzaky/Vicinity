@@ -10,6 +10,8 @@ components, scene view handles and an editor dashboard, aimed at artists and lev
 - Source-available: free for noncommercial use, commercial licence via the Unity Asset Store
 - Addressables supported but **not** required
 
+**[Read the manual online](https://nekuzaky.com/docs/vicinity)** — the same pages, rendered.
+
 ---
 
 ## Table of contents
@@ -20,6 +22,7 @@ components, scene view handles and an editor dashboard, aimed at artists and lev
 - [The four components](#the-four-components)
 - [Distances and the margin between them](#distances-and-the-margin-between-them)
 - [Profiles](#profiles)
+- [The residency graph](#the-residency-graph)
 - [Where assets come from](#where-assets-come-from)
 - [The dashboard](#the-dashboard)
 - [Scene view](#scene-view)
@@ -252,6 +255,47 @@ Three presets ship with the sample:
 | Mobile | 45 m | 65 m | Limited memory and slow storage |
 
 Pick a preset from a dropdown rather than inventing distance values.
+
+---
+
+## The residency graph
+
+A profile gives every object the same distances. A **residency graph** gives each object its own,
+worked out from what that object actually is — its size, its memory cost, its tag. It is optional,
+and most projects never need one.
+
+Create one with `Assets > Create > Vicinity > Residency Graph`, assign it to a profile, and open it
+from `Tools > Vicinity > Residency Graph`. A new graph arrives already wired to an output, so it
+never opens on an error.
+
+| Menu | Node | What it gives you |
+| --- | --- | --- |
+| Value | Number | A constant you type |
+| Object | Size | How big this object is, in meters |
+| Object | Memory | How much this object's models weigh, in MB |
+| Object | Has Tag | 1 when the object carries the tag, 0 otherwise |
+| Maths | Maths | Add, subtract, multiply, and so on |
+| Maths | Keep Between | Clamps a value between a floor and a ceiling |
+| Logic | Compare | Larger than, or smaller than |
+| Logic | Choose | Picks between two values based on a condition |
+| Output | Residency Output | Loading distance, releasing distance, priority |
+
+The toolbar carries a sample object — a size, a memory figure, a tag match — and the line under the
+canvas states what that object would do, live, including how many instructions the graph compiled to.
+When a graph cannot compile, that line says why in plain words.
+
+Whatever the graph computes, the releasing distance is forced beyond the loading distance before it
+reaches the engine, so a graph cannot produce an object that flickers at a threshold. A graph
+containing a loop is refused before it runs.
+
+### What it costs at runtime
+
+Nothing measurable. A graph is compiled **once** into a flat program of instructions, then evaluated
+inside the same Burst job as everything else — no reflection, no allocation, and no node visited
+while the game plays.
+
+The editor is built on [NodeGraphProcessor](https://github.com/alelievr/NodeGraphProcessor) by
+Antoine Lelievre, included under MIT — see [License](#license). Only the editing side comes from it.
 
 ---
 
@@ -534,3 +578,17 @@ A commercial licence comes with every purchase of Vicinity on the Unity Asset St
 commercial licence outside the Asset Store, contact the licensor.
 
 The full terms are in [LICENSE.md](LICENSE.md). The summary above is a convenience, not the licence.
+
+### Third-party content
+
+Vicinity ships one third-party component, and no fonts, artwork or audio.
+
+| Component | Author | Licence | Used for |
+| --- | --- | --- | --- |
+| [NodeGraphProcessor](https://github.com/alelievr/NodeGraphProcessor) 1.3.1 | Antoine Lelievre | MIT | The canvas behind the [residency graph](#the-residency-graph) |
+
+Its licence travels with this package at `ThirdParty/NodeGraphProcessor/LICENSE.md`, and the full
+notice — including the two mechanical changes made to it — is in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). MIT permits this use, including commercially.
+
+Only the **editor** comes from that library. Vicinity does not use its runtime graph traversal.

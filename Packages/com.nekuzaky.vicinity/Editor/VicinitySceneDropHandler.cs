@@ -18,8 +18,8 @@ namespace Nekuzaky.Vicinity.Editor
         static VicinitySceneDropHandler()
         {
             // The static constructor runs again on every domain reload, and Unity keeps handlers across one.
-            DragAndDrop.RemoveDropHandler(Handler);
-            DragAndDrop.AddDropHandler(Handler);
+            DragAndDrop.RemoveDropHandlerV2(Handler);
+            DragAndDrop.AddDropHandlerV2(Handler);
         }
 
         #endregion

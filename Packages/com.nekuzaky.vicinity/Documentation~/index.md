@@ -73,6 +73,28 @@ A `VicinityProfile` groups distances and budgets. Three are shipped with the Str
 `Interior Dense`, `Open World`, `Mobile`. Assign one to the manager or to a volume rather than
 inventing numbers per object.
 
+## The residency graph
+
+A profile gives every object the same distances. A residency graph gives each object its own, worked
+out from its size, its memory cost or its tag. It is optional.
+
+Create one with `Assets > Create > Vicinity > Residency Graph` and assign it to a profile. A new
+graph arrives already wired to an output, so it never opens on an error.
+
+The important part is what happens to it afterwards. A graph is **compiled once** into
+`CompiledResidencyRules` — a flat array of instructions plus an array of constants — and that program
+is evaluated inside the same Burst job as the distance test. No node is visited at runtime, nothing
+is reflected over, and nothing is allocated. Editing the graph recompiles it; playing never does.
+
+Two invariants are enforced by the compiler rather than left to the author:
+
+- the releasing distance is pushed beyond the loading distance before the rule reaches the engine, so
+  a graph cannot produce an object that flickers at a threshold;
+- a graph whose nodes form a cycle is refused, with an explanation, before anything runs.
+
+The editor canvas comes from NodeGraphProcessor (MIT, Antoine Lelievre), included under
+`ThirdParty/NodeGraphProcessor/`. Only the editing side: its runtime graph traversal is unused.
+
 ## Asset sources
 
 | Source | Needs |
