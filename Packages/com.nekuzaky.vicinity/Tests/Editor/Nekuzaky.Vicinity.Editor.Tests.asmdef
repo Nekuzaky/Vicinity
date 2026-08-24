@@ -1,0 +1,28 @@
+{
+    "name": "Nekuzaky.Vicinity.Editor.Tests",
+    "rootNamespace": "Nekuzaky.Vicinity.Editor.Tests",
+    "references": [
+        "Nekuzaky.Vicinity",
+        "Nekuzaky.Vicinity.Editor",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

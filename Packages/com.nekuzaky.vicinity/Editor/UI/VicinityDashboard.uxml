@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="True">
+    <ui:VisualElement name="root" class="vicinity-root">
+        <ui:VisualElement name="header" class="vicinity-header">
+            <ui:Label name="title" text="Vicinity" class="vicinity-title" />
+            <ui:Label name="subtitle" text="Keeps distant assets out of memory." class="vicinity-subtitle" />
+            <ui:Toggle name="gizmo-toggle" label="Show rings in the scene view" class="vicinity-gizmo-toggle" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="tab-bar" class="vicinity-tab-bar">
+            <ui:Button name="tab-setup" text="Setup" class="vicinity-tab" />
+            <ui:Button name="tab-validation" text="Validation" class="vicinity-tab" />
+            <ui:Button name="tab-live" text="Live" class="vicinity-tab" />
+        </ui:VisualElement>
+
+        <ui:ScrollView name="content" class="vicinity-content" />
+    </ui:VisualElement>
+</ui:UXML>

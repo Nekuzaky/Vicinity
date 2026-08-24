@@ -1,0 +1,16 @@
+{
+    "name": "Nekuzaky.Vicinity.Demo",
+    "rootNamespace": "Nekuzaky.Vicinity.Demo",
+    "references": [
+        "Nekuzaky.Vicinity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

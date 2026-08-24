@@ -1,0 +1,34 @@
+{
+  "name": "com.nekuzaky.vicinity",
+  "version": "0.1.0",
+  "displayName": "Vicinity",
+  "description": "Vicinity controls which 3D assets stay in memory based on their distance to the player. Distant objects are never loaded, nearby ones are loaded and released as the player moves. It complements LODGroup and Mesh LOD, which decide what is drawn, and never replaces them.",
+  "unity": "6000.3",
+  "author": {
+    "name": "Nekuzaky"
+  },
+  "dependencies": {
+    "com.unity.burst": "1.8.29",
+    "com.unity.collections": "2.6.5",
+    "com.unity.mathematics": "1.3.3",
+    "com.unity.profiling.core": "1.0.3",
+    "com.unity.render-pipelines.universal": "17.3.0"
+  },
+  "samples": [
+    {
+      "displayName": "Streaming Demo",
+      "description": "A field of 5,000 managed objects, a moving viewpoint, and three ready-made profiles.",
+      "path": "Samples~/StreamingDemo"
+    }
+  ],
+  "keywords": [
+    "streaming",
+    "memory",
+    "residency",
+    "open world",
+    "urp",
+    "level design"
+  ],
+  "licensesUrl": "https://github.com/Nekuzaky/Vicinity/blob/main/Packages/com.nekuzaky.vicinity/LICENSE.md",
+  "changelogUrl": "https://github.com/Nekuzaky/Vicinity/blob/main/Packages/com.nekuzaky.vicinity/CHANGELOG.md"
+}

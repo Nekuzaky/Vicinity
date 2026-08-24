@@ -1,0 +1,19 @@
+{
+    "name": "Nekuzaky.Vicinity.Demo.Editor",
+    "rootNamespace": "Nekuzaky.Vicinity.Demo.Editor",
+    "references": [
+        "Nekuzaky.Vicinity",
+        "Nekuzaky.Vicinity.Demo"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

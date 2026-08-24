@@ -1,0 +1,27 @@
+{
+    "name": "Nekuzaky.Vicinity.Editor",
+    "rootNamespace": "Nekuzaky.Vicinity.Editor",
+    "references": [
+        "Nekuzaky.Vicinity",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.GPUDriven.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "2.0.0",
+            "define": "VICINITY_ADDRESSABLES"
+        }
+    ],
+    "noEngineReferences": false
+}

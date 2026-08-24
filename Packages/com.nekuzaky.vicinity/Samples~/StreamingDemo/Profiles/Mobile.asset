@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e97304448a411a64481b2cc9745e7ae7, type: 3}
+  m_Name: Mobile
+  m_EditorClassIdentifier: 
+  m_serializedVersion: 1
+  m_loadDistance: 45
+  m_unloadDistance: 65
+  m_simultaneousLoads: 3
+  m_gridSize: 32
+  m_checkInterval: 0.25
+  m_lookAheadSeconds: 1.0
+  m_offScreenDelayFactor: 4
+  m_retriesBeforeGivingUp: 2
+  m_frameBudgetMilliseconds: 1
+  m_memoryBudgetMegabytes: 192
