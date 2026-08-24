@@ -84,9 +84,17 @@ namespace Nekuzaky.Vicinity.Editor.Graph
                 graphView = new BaseGraphView(this);
                 graphView.Add(BuildToolbar());
 
-                // Groups and sticky notes are in the canvas' own context menu; the minimap is not, and
-                // has to be asked for.
-                graphView.Add(new MiniMapView(graphView));
+                // Groups and sticky notes are in the canvas' own context menu; the minimap is not, and has
+                // to be asked for. It places itself at the very top-left, which is where the toolbar sits,
+                // so it is moved clear of it.
+                MiniMapView map = new MiniMapView(graphView) { anchored = true };
+                map.SetPosition(new Rect(12f, ToolbarHeight + 12f, 190f, 140f));
+
+                graphView.Add(map);
+
+                // Right-drag pans, which is what most people reach for. Middle-drag still works: the canvas
+                // brings its own dragger, and this one sits alongside it.
+                graphView.AddManipulator(new RightDragPanner(graphView));
             }
 
             StyleSheet style = AssetDatabase.LoadAssetAtPath<StyleSheet>(StylePath);
@@ -97,15 +105,16 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             }
 
             // The base window looks for the graph view among the root's children, so adding it is not
-            // optional: without this the window comes up empty with an error in the console.
-            graphView.style.flexGrow = 1f;
+            // optional: without this the window comes up empty with an error in the console. It stretches
+            // to fill the root on its own, so it must be the root's only child — anything else added
+            // beside it is laid out on top of the canvas and swallows the mouse.
             rootView.Add(graphView);
 
             _status ??= BuildStatusLine();
 
             // Adding an element that already has a parent moves it, which keeps the status line last
             // however many times this window is rebuilt.
-            rootView.Add(_status);
+            graphView.Add(_status);
         }
 
         /// <inheritdoc />
@@ -133,6 +142,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
         private const float DefaultSampleSize = 4f;
         private const float DefaultSampleMemory = 8f;
         private const long RefreshMilliseconds = 250L;
+        private const float ToolbarHeight = 34f;
 
         [SerializeField] private float m_sampleSize = DefaultSampleSize;
         [SerializeField] private float m_sampleMemory = DefaultSampleMemory;
@@ -145,6 +155,12 @@ namespace Nekuzaky.Vicinity.Editor.Graph
         {
             Toolbar toolbar = new Toolbar();
             toolbar.AddToClassList("vicinity-graph__toolbar");
+
+            Label controls = new Label("Right-drag or middle-drag to pan  ·  scroll to zoom  ·  right-click to add a node");
+            controls.AddToClassList("vicinity-graph__hint");
+            toolbar.Add(controls);
+
+            toolbar.Add(new ToolbarSpacer { flex = true });
 
             Label sample = new Label("Preview an object of");
             sample.AddToClassList("vicinity-graph__hint");
