@@ -53,7 +53,10 @@ to Vicinity in one step. One undo takes it all back.
 
 ## Read more
 
-The full documentation lives with the package:
+**[The manual, online →](https://nekuzaky.com/docs/vicinity)** — the same pages as `docs/wiki/`,
+rendered and searchable.
+
+It also lives with the package:
 
 - **[Package README](Packages/com.nekuzaky.vicinity/README.md)** — components, distances, dashboard,
   GPU Resident Drawer, profiling, public API
