@@ -88,7 +88,6 @@ namespace Nekuzaky.Vicinity.Graph
     /// A graph that decides, per object, how close the player must be for it to load. Compiled once
     /// into a flat program, then evaluated for every managed object without reflection.
     /// </summary>
-    [CreateAssetMenu(fileName = "Residency Graph", menuName = "Vicinity/Residency Graph", order = 201)]
     public sealed class ResidencyGraphAsset : VicinityGraphAsset
     {
         #region Main Methods

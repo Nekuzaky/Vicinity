@@ -14,6 +14,12 @@ leaves the question of which mesh is drawn to `LODGroup` and Mesh LOD.
 
 **Setting a scene up without writing code**
 
+- A drop zone at the top of the dashboard. Drag prefabs or imported 3D models onto it — one, several, or a whole folder —
+  and each comes back as `<name> (Vicinity).prefab` beside the original, measured, and given a
+  loading distance derived from its size. Dropping the same prefab again re-measures it and leaves
+  distances set by hand alone. When Addressables is installed the model is handed to it
+  automatically, which is what actually keeps it out of memory; when it is not, the dashboard says
+  in plain words that memory will not drop and offers to install it.
 - `Tools > Vicinity > Dashboard` with three tabs.
 - **Setup** — checks URP, the SRP Batcher, the GPU Resident Drawer, Mipmap Streaming and
   Addressables, each with a one-line explanation and a fix button where a fix exists. Scans the

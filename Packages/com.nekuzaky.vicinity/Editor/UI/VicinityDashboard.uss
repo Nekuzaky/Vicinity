@@ -302,3 +302,45 @@
     background-color: rgb(52, 55, 61);
     color: rgb(90, 156, 242);
 }
+
+.vicinity-drop {
+    min-height: 96px;
+    margin: 8px 0 8px 0;
+    padding: 20px 16px 20px 16px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(34, 36, 40);
+    border-width: 1px;
+    border-color: rgb(70, 75, 83);
+    transition-property: background-color, border-color;
+    transition-duration: 0.12s;
+}
+
+.vicinity-drop:hover {
+    border-color: rgb(86, 92, 101);
+}
+
+.vicinity-drop--hover {
+    background-color: rgb(38, 48, 64);
+    border-color: rgb(90, 156, 242);
+}
+
+.vicinity-drop--refused {
+    background-color: rgb(46, 36, 38);
+    border-color: rgb(198, 96, 96);
+}
+
+.vicinity-drop__headline {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: rgb(223, 225, 229);
+    margin-bottom: 5px;
+}
+
+.vicinity-drop__detail {
+    font-size: 11px;
+    color: rgb(139, 145, 151);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}

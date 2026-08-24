@@ -98,13 +98,41 @@ Both cases are verified on every release.
 ## One step, no code
 
 ```
-Tools > Vicinity > Set Up This Scene
+Tools > Vicinity > Dashboard
 ```
 
-That is the whole setup. It adds a manager and a viewpoint if the scene has none, then hands every
-object that draws something over to Vicinity. One undo takes it all back.
+### Drop a prefab in
 
-The same button sits at the top of the dashboard, if you prefer to see what happens.
+The dashboard opens on a drop zone. Drag a prefab **or an imported 3D model** onto it — `.fbx`,
+`.obj`, `.blend`, anything Unity imports as a model — or a pile of them, or a whole folder. Each one
+comes back as `<name> (Vicinity).prefab`, sitting beside the original. Place that one in your scene
+instead of the original and you are done.
+
+A model whose root carries an axis conversion keeps it, so nothing arrives lying on its side.
+
+What Vicinity works out on its own:
+
+| Measured | Used for |
+| --- | --- |
+| How big the model is | The distance it loads at, rounded to something readable |
+| How much memory it takes | The reporting in the dashboard and the memory budget |
+| Whether Addressables is installed | How the model is named, and so whether memory actually drops |
+
+Dropping the same prefab again re-measures it. Distances you set by hand survive that.
+
+> **On memory, plainly.** A prefab that points *straight at* its model does not save memory: Unity
+> loads anything a scene names directly, whether or not Vicinity has shown it yet. Only a model named
+> through **Addressables** or **Resources** is genuinely absent until asked for. When Addressables is
+> installed, the drop zone uses it automatically. When it is not, the produced prefab still works —
+> Vicinity shows and hides it correctly — but the dashboard says so in as many words instead of
+> letting you believe otherwise.
+
+### Or set up a whole scene
+
+The **Set up this scene** button at the top of the dashboard adds a manager and a viewpoint if the
+scene has none, then hands every object that draws something over to Vicinity. One undo takes it all
+back. This works in place, on objects already in the scene, so it carries the same memory caveat as
+a direct reference.
 
 ### When you want to choose yourself
 

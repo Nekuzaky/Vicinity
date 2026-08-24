@@ -28,10 +28,16 @@ namespace Nekuzaky.Vicinity.Editor.Graph
 
             if (found.Length == 0)
             {
-                EditorUtility.DisplayDialog(
+                bool create = EditorUtility.DisplayDialog(
                     "Vicinity",
-                    "This project has no residency graph yet. Create one with Assets > Create > Vicinity > Residency Graph, then double-click it.",
-                    "Right");
+                    "This project has no residency graph yet. A graph decides, per object, how close the player must be before it loads.",
+                    "Make me one",
+                    "Not now");
+
+                if (create)
+                {
+                    Open(ResidencyGraphCreation.CreateAt("Assets/Residency Graph.asset"));
+                }
 
                 return;
             }
@@ -57,6 +63,9 @@ namespace Nekuzaky.Vicinity.Editor.Graph
             {
                 return;
             }
+
+            // An asset saved with no nodes would open on a blank canvas under a red error. Fill it in first.
+            ResidencyGraphCreation.SeedIfEmpty(asset);
 
             VicinityGraphWindow window = GetWindow<VicinityGraphWindow>();
             window.titleContent = new GUIContent(asset.name);

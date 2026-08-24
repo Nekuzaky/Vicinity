@@ -5,5 +5,6 @@
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Nekuzaky.Vicinity.Tests.csproj" />
   <Project Path="Nekuzaky.Vicinity.Addressables.csproj" />
+  <Project Path="Nekuzaky.Vicinity.Editor.Addressables.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
 </Solution>

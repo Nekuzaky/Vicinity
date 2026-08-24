@@ -1,0 +1,30 @@
+{
+    "name": "Nekuzaky.Vicinity.Editor.Addressables",
+    "rootNamespace": "Nekuzaky.Vicinity.Editor",
+    "references": [
+        "Nekuzaky.Vicinity",
+        "Nekuzaky.Vicinity.Editor",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VICINITY_ADDRESSABLES"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "2.0.0",
+            "define": "VICINITY_ADDRESSABLES"
+        }
+    ],
+    "noEngineReferences": false
+}

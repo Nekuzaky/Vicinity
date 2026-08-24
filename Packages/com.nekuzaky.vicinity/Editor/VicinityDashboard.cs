@@ -104,7 +104,6 @@ namespace Nekuzaky.Vicinity.Editor
         private const int LiveTabIndex = 2;
         private const int MemorySampleCount = 300;
         private const string ActiveTabClass = "vicinity-tab--active";
-        private const string SponsorsUrl = "https://github.com/sponsors/Nekuzaky";
         private const string PatreonUrl = "https://www.patreon.com/Nekuzaky";
         private const string CoffeeUrl = "https://www.buymeacoffee.com/nekuzaky";
 
@@ -113,6 +112,7 @@ namespace Nekuzaky.Vicinity.Editor
         private int _activeTab;
 
         private List<ScanCandidate> _candidates;
+        private List<PrefabConversion> _conversions;
         private MemoryGraph _memoryGraph;
         private Label _liveSummary;
         private Label _liveExclusions;
@@ -136,7 +136,6 @@ namespace Nekuzaky.Vicinity.Editor
             text.AddToClassList("vicinity-footer__text");
             footer.Add(text);
 
-            footer.Add(BuildSupportLink("GitHub Sponsors", SponsorsUrl));
             footer.Add(BuildSupportLink("Patreon", PatreonUrl));
             footer.Add(BuildSupportLink("Buy me a coffee", CoffeeUrl));
         }
@@ -199,7 +198,16 @@ namespace Nekuzaky.Vicinity.Editor
 
         private void BuildSetupTab()
         {
-            _content.Add(Section("Get started"));
+            _content.Add(Section("Take prefabs over"));
+
+            VicinityDropZone drop = new VicinityDropZone();
+            drop.Converted += OnPrefabsConverted;
+            _content.Add(drop);
+
+            BuildSelectionShortcut(drop);
+            BuildConversionResults();
+
+            _content.Add(Section("Or set up this whole scene"));
 
             Button oneClick = new Button(SetUpSceneFromDashboard) { text = "Set up this scene" };
             oneClick.AddToClassList("vicinity-hero-button");
@@ -719,6 +727,182 @@ namespace Nekuzaky.Vicinity.Editor
 
             File.WriteAllText(path, builder.ToString());
             ShowNotification(new GUIContent($"Saved {_samples.Count} frames."));
+        }
+
+        private void BuildSelectionShortcut(VicinityDropZone drop)
+        {
+            int count = VicinityDropZone.CountInSelection();
+
+            if (count == 0)
+            {
+                return;
+            }
+
+            VisualElement actions = new VisualElement();
+            actions.AddToClassList("vicinity-primary-actions");
+
+            actions.Add(new Button(drop.ConvertSelection)
+            {
+                text = count == 1
+                    ? "Take over the selected prefab"
+                    : $"Take over the {count} selected prefabs"
+            });
+
+            _content.Add(actions);
+        }
+
+        private void OnPrefabsConverted(List<PrefabConversion> conversions)
+        {
+            _conversions = conversions;
+
+            List<UnityEngine.Object> produced = new List<UnityEngine.Object>();
+
+            foreach (PrefabConversion conversion in conversions)
+            {
+                if (conversion.Succeeded)
+                {
+                    produced.Add(conversion.Result);
+                }
+            }
+
+            if (produced.Count > 0)
+            {
+                Selection.objects = produced.ToArray();
+                EditorGUIUtility.PingObject(produced[0]);
+            }
+
+            ShowNotification(new GUIContent(produced.Count == 1
+                ? $"{produced[0].name} is ready to place."
+                : $"{produced.Count} prefabs are ready to place."));
+
+            // The drop zone is still handling its own event, so the rebuild that removes it waits a frame.
+            rootVisualElement.schedule.Execute(() => SelectTab(0));
+        }
+
+        private void BuildConversionResults()
+        {
+            if (_conversions == null || _conversions.Count == 0)
+            {
+                _content.Add(Hint("What comes out lands beside the original, named the same with \"(Vicinity)\" after it. Place that one in your scene instead of the original."));
+                return;
+            }
+
+            int done = 0;
+            long total = 0L;
+            bool anyDirect = false;
+
+            foreach (PrefabConversion conversion in _conversions)
+            {
+                if (!conversion.Succeeded)
+                {
+                    continue;
+                }
+
+                done++;
+                total += conversion.EstimatedBytes;
+                anyDirect |= conversion.Strength == ReferenceStrength.Direct;
+            }
+
+            _content.Add(Hint($"{done} of {_conversions.Count} taken over, {VicinityEditorStyles.DescribeBytes(total)} of models. Place the new prefabs instead of the originals."));
+
+            if (anyDirect)
+            {
+                _content.Add(BuildDirectReferenceWarning());
+            }
+
+            foreach (PrefabConversion conversion in _conversions)
+            {
+                _content.Add(BuildConversionRow(conversion));
+            }
+        }
+
+        private VisualElement BuildDirectReferenceWarning()
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("vicinity-row");
+            row.AddToClassList("vicinity-row--warn");
+
+            VisualElement text = new VisualElement();
+            text.AddToClassList("vicinity-row__text");
+
+            Label title = new Label("These point straight at their models, so memory will not drop");
+            title.AddToClassList("vicinity-row__title");
+            text.Add(title);
+
+            Label detail = new Label(
+                "Vicinity still shows and hides them, but a scene that names a model directly makes Unity load it anyway. Install Addressables and drop the prefabs again to get the saving.");
+
+            detail.AddToClassList("vicinity-row__detail");
+            text.Add(detail);
+
+            row.Add(text);
+
+            Button install = new Button(static () => UnityEditor.PackageManager.UI.Window.Open("com.unity.addressables"))
+            {
+                text = "Install Addressables"
+            };
+
+            install.AddToClassList("vicinity-row__action");
+            row.Add(install);
+
+            return row;
+        }
+
+        private VisualElement BuildConversionRow(PrefabConversion conversion)
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("vicinity-row");
+            row.AddToClassList(conversion.Succeeded ? "vicinity-row--ok" : "vicinity-row--error");
+
+            VisualElement text = new VisualElement();
+            text.AddToClassList("vicinity-row__text");
+
+            Label title = new Label(conversion.Succeeded
+                ? Path.GetFileNameWithoutExtension(conversion.ResultPath)
+                : conversion.SourceName);
+
+            title.AddToClassList("vicinity-row__title");
+            text.Add(title);
+
+            Label detail = new Label(conversion.Succeeded ? Describe(conversion) : conversion.Problem);
+            detail.AddToClassList("vicinity-row__detail");
+            text.Add(detail);
+
+            row.Add(text);
+
+            if (!conversion.Succeeded)
+            {
+                return row;
+            }
+
+            Button reveal = new Button(() =>
+            {
+                Selection.activeObject = conversion.Result;
+                EditorGUIUtility.PingObject(conversion.Result);
+            })
+            {
+                text = "Show in Project"
+            };
+
+            reveal.AddToClassList("vicinity-row__action");
+            row.Add(reveal);
+
+            return row;
+        }
+
+        private static string Describe(PrefabConversion conversion)
+        {
+            string how = conversion.Strength switch
+            {
+                ReferenceStrength.Addressable => "loaded through Addressables",
+                ReferenceStrength.Resources => "loaded from Resources",
+                _ => "pointed at directly"
+            };
+
+            string again = conversion.ReplacedExisting ? ", refreshed" : string.Empty;
+
+            return $"{VicinityEditorStyles.DescribeBytes(conversion.EstimatedBytes)}, {conversion.Radius * 2f:0.#} m across — " +
+                $"loads at {conversion.LoadDistance:0.#} m, released at {conversion.ReleaseDistance:0.#} m, {how}{again}.";
         }
 
         private static Label Section(string text)

@@ -47,6 +47,11 @@ namespace Nekuzaky.Vicinity
         [Min(0L)]
         private long m_estimatedMemoryBytes;
 
+        [SerializeField]
+        [HideInInspector]
+        [Min(0f)]
+        private float m_authoredRadius;
+
         #endregion
 
         #region Unity API
@@ -175,7 +180,7 @@ namespace Nekuzaky.Vicinity
             get
             {
                 CaptureStandInRenderers();
-                return _boundsRadius;
+                return Mathf.Max(_boundsRadius, m_authoredRadius);
             }
         }
 
@@ -199,6 +204,28 @@ namespace Nekuzaky.Vicinity
         public void SetEstimatedMemoryBytes(long bytes)
         {
             m_estimatedMemoryBytes = bytes < 0L ? 0L : bytes;
+        }
+
+        /// <summary>
+        /// Records how big the models are, in meters from here to their furthest corner. An object that keeps
+        /// no stand-in draws nothing of its own, so without this it would measure as a point and any rule that
+        /// asks about size would misjudge it.
+        /// </summary>
+        public void SetAuthoredRadius(float radius)
+        {
+            m_authoredRadius = radius < 0f ? 0f : radius;
+        }
+
+        /// <summary>
+        /// Gives this object distances of its own instead of the ones from the manager or a volume. The
+        /// releasing distance is pushed out if needed, so an object set up this way can never flicker.
+        /// Meant for tooling.
+        /// </summary>
+        public void SetOwnDistances(float loadDistance, float releaseDistance)
+        {
+            m_overrideDistances = true;
+            m_loadDistance = Mathf.Max(loadDistance, 0f);
+            m_unloadDistance = Mathf.Max(releaseDistance, m_loadDistance + MinimumMargin);
         }
 
         /// <summary>Rewrites values saved by an older version of Vicinity. Safe to call repeatedly.</summary>

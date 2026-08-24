@@ -37,10 +37,19 @@ https://github.com/Nekuzaky/Vicinity.git?path=/Packages/com.nekuzaky.vicinity
 ## Use it
 
 ```
-Tools > Vicinity > Set Up This Scene
+Tools > Vicinity > Dashboard
 ```
 
-That is the whole setup. One undo takes it all back.
+Drag a prefab or an imported 3D model (`.fbx`, `.obj`, `.blend`…) onto the drop zone. It comes back
+as `<name> (Vicinity).prefab` beside the original, measured and given distances that suit its size.
+Place that one in your scene instead. A pile of them, or a whole folder, works the same way.
+
+For a scene that already exists, **Set up this scene** hands every object that draws something over
+to Vicinity in one step. One undo takes it all back.
+
+> Memory only really drops for models named through **Addressables** or **Resources** — Unity loads
+> anything a scene points at directly. Vicinity uses Addressables on its own when the package is
+> installed, and tells you plainly when it cannot.
 
 ## Read more
 
