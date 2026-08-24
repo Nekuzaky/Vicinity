@@ -44,7 +44,7 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         public void OpeningTheSameGraphTwiceDoesNotStackCanvases()
         {
             OpenWindow();
-            VicinityGraphWindow.Open(_graph);
+            _window.InitializeGraph(_graph);
 
             Assert.AreEqual(1, CountOf<BaseGraphView>(_window.rootVisualElement),
                 "a second open must reuse the canvas rather than leave two behind");
@@ -62,7 +62,6 @@ namespace Nekuzaky.Vicinity.Editor.Tests
         {
             if (_window != null)
             {
-                _window.Close();
                 Object.DestroyImmediate(_window);
                 _window = null;
             }
@@ -74,14 +73,19 @@ namespace Nekuzaky.Vicinity.Editor.Tests
             }
         }
 
+        /// <summary>
+        /// Builds the window without showing it. Asking for a real one would need a display, which a build
+        /// machine does not have, and none of what is checked here depends on pixels — the base window looks
+        /// for the canvas in the visual tree, and that tree exists whether or not anything draws it.
+        /// </summary>
         private void OpenWindow()
         {
             _graph = ResidencyGraphAsset.CreateStartingPoint();
 
-            VicinityGraphWindow.Open(_graph);
-            _window = EditorWindow.GetWindow<VicinityGraphWindow>();
+            _window = ScriptableObject.CreateInstance<VicinityGraphWindow>();
+            _window.InitializeGraph(_graph);
 
-            Assert.IsNotNull(_window, "the window did not open at all");
+            Assert.IsNotNull(_window, "the window was not created at all");
         }
 
         private static int CountOf<TElement>(VisualElement root) where TElement : VisualElement

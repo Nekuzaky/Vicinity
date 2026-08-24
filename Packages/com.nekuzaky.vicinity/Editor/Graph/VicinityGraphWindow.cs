@@ -44,7 +44,7 @@ namespace Nekuzaky.Vicinity.Editor.Graph
         [OnOpenAsset]
         internal static bool OpenFromProject(int instanceId, int line)
         {
-            if (EditorUtility.InstanceIDToObject(instanceId) is not ResidencyGraphAsset asset)
+            if (EditorUtility.EntityIdToObject(instanceId) is not ResidencyGraphAsset asset)
             {
                 return false;
             }
