@@ -1,0 +1,56 @@
+name: Bug report
+description: Something behaves differently from what the documentation says.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: open `Tools > Vicinity > Dashboard`, go to the **Validation** tab, and check
+        whether it already names the problem. It reports most misconfigurations with a fix button.
+  - type: textarea
+    id: what-happens
+    attributes:
+      label: What happens
+      description: What you see, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce it
+      description: The smallest scene and the steps that show it. A scene that reproduces it every time is worth more than a long description.
+      placeholder: |
+        1. New scene, one cube with a Vicinity Object
+        2. Tools > Vicinity > Set Up This Scene
+        3. Press Play and walk away
+    validations:
+      required: true
+  - type: input
+    id: unity
+    attributes:
+      label: Unity version
+      placeholder: "6000.3.13f1"
+    validations:
+      required: true
+  - type: input
+    id: vicinity
+    attributes:
+      label: Vicinity version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: addressables
+    attributes:
+      label: Is Addressables installed?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Any error or warning, copied as text rather than as a screenshot.
+      render: text

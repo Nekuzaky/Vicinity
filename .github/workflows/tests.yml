@@ -1,0 +1,60 @@
+# Runs the Vicinity test suites in a headless Unity.
+#
+# This workflow is manual on purpose. It cannot run until three repository secrets exist,
+# and a workflow that fails on every push is worse than no workflow at all.
+#
+# Settings > Secrets and variables > Actions:
+#   UNITY_LICENSE   the contents of your .ulf licence file (Personal), or
+#   UNITY_SERIAL    your serial (Plus / Pro)
+#   UNITY_EMAIL     the account e-mail
+#   UNITY_PASSWORD  the account password
+#
+# Once they are set, add the push and pull_request triggers below.
+
+name: Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: ${{ matrix.testMode }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        testMode:
+          - editmode
+          - playmode
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ matrix.testMode }}-${{ hashFiles('Packages/packages-lock.json') }}
+          restore-keys: |
+            Library-${{ matrix.testMode }}-
+            Library-
+
+      - uses: game-ci/unity-test-runner@v4
+        id: tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 6000.3.13f1
+          testMode: ${{ matrix.testMode }}
+          artifactsPath: ${{ matrix.testMode }}-results
+          checkName: ${{ matrix.testMode }} results
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.testMode }}-results
+          path: ${{ steps.tests.outputs.artifactsPath }}

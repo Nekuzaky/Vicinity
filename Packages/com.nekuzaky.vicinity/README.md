@@ -16,7 +16,7 @@ components, scene view handles and an editor dashboard, aimed at artists and lev
 
 - [What Vicinity is not](#what-vicinity-is-not)
 - [Installation](#installation)
-- [Three steps, no code](#three-steps-no-code)
+- [One step, no code](#one-step-no-code)
 - [The four components](#the-four-components)
 - [Distances and the margin between them](#distances-and-the-margin-between-them)
 - [Profiles](#profiles)
@@ -95,16 +95,24 @@ Both cases are verified on every release.
 
 ---
 
-## Three steps, no code
+## One step, no code
 
-1. `Window > Vicinity > Dashboard`
-2. **Scan Scene** — lists every object Vicinity could take over, heaviest first
-3. **Apply** — adds the components, and creates a manager and a viewpoint if the scene has none
+```
+Tools > Vicinity > Set Up This Scene
+```
 
-That is the entire setup. Everything below is optional tuning.
+That is the whole setup. It adds a manager and a viewpoint if the scene has none, then hands every
+object that draws something over to Vicinity. One undo takes it all back.
 
-**Apply** is idempotent, fully undoable in one step, and never silently overwrites an object you
-configured by hand — it asks first.
+The same button sits at the top of the dashboard, if you prefer to see what happens.
+
+### When you want to choose yourself
+
+`Tools > Vicinity > Dashboard`, then **Scan Scene** to list every candidate heaviest first, tick the
+ones you want, and **Apply to selected**.
+
+Either way the operation is idempotent, fully undoable in one step, and never silently overwrites an
+object you configured by hand — it asks first.
 
 ---
 
@@ -224,7 +232,7 @@ object by where its asset comes from. Provider selection is exposed only as an a
 
 ## The dashboard
 
-`Window > Vicinity > Dashboard`. Built in UI Toolkit, readable down to 1280 px wide.
+`Tools > Vicinity > Dashboard`. Built in UI Toolkit, readable down to 1280 px wide.
 
 ### Setup
 
@@ -433,7 +441,7 @@ VicinityProviders.RegisterFactory(AssetSourceKind.Resources, () => new MyProvide
 ## Sample
 
 Import **Streaming Demo** from the Package Manager, then
-`Window > Vicinity > Build the Streaming Demo Scene`.
+`Tools > Vicinity > Build the Streaming Demo Scene`.
 
 It generates a field of 5,000 managed objects and a viewpoint that walks back and forth on its own.
 Press Play and watch the Live tab: the loaded count and memory graph rise as the viewpoint

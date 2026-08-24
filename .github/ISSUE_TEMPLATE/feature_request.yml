@@ -1,0 +1,23 @@
+name: Feature request
+description: Something Vicinity should do and does not.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Vicinity deliberately does a small number of things. It will never generate LODs, simplify
+        meshes, stream textures, or manage LOD transitions — those belong to `LODGroup`, Mesh LOD and
+        Mipmap Streaming. Requests in that direction are declined on purpose.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem you hit
+      description: Describe the situation, not the solution. What were you trying to build?
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: What you do today instead
+    validations:
+      required: true

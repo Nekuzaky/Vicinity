@@ -166,20 +166,79 @@ namespace Nekuzaky.Vicinity.Editor
 
         private void BuildSetupTab()
         {
-            _content.Add(Section("Project configuration"));
+            _content.Add(Section("Get started"));
 
-            foreach (ProjectCheck check in VicinityProjectChecks.Collect())
+            Button oneClick = new Button(SetUpSceneFromDashboard) { text = "Set up this scene" };
+            oneClick.AddToClassList("vicinity-hero-button");
+            _content.Add(oneClick);
+
+            _content.Add(Hint("Adds a manager and a viewpoint if this scene has none, then hands every object that draws something over to Vicinity. One undo takes it all back."));
+
+            BuildProjectChecks();
+            BuildManualSelection();
+        }
+
+        private void BuildProjectChecks()
+        {
+            List<ProjectCheck> checks = VicinityProjectChecks.Collect();
+            int satisfied = 0;
+
+            foreach (ProjectCheck check in checks)
             {
-                _content.Add(BuildCheckRow(check));
+                if (check.IsSatisfied)
+                {
+                    satisfied++;
+                }
             }
 
-            _content.Add(Section("This scene"));
+            _content.Add(Section("Project configuration"));
+
+            if (satisfied == checks.Count)
+            {
+                _content.Add(Hint("Nothing to fix in this project."));
+            }
+
+            foreach (ProjectCheck check in checks)
+            {
+                if (!check.IsSatisfied)
+                {
+                    _content.Add(BuildCheckRow(check));
+                }
+            }
+
+            if (satisfied == 0)
+            {
+                return;
+            }
+
+            Foldout settled = new Foldout
+            {
+                text = $"{satisfied} already fine",
+                value = false
+            };
+
+            settled.AddToClassList("vicinity-foldout");
+
+            foreach (ProjectCheck check in checks)
+            {
+                if (check.IsSatisfied)
+                {
+                    settled.Add(BuildCheckRow(check));
+                }
+            }
+
+            _content.Add(settled);
+        }
+
+        private void BuildManualSelection()
+        {
+            _content.Add(Section("Or choose the objects yourself"));
 
             VisualElement actions = new VisualElement();
             actions.AddToClassList("vicinity-primary-actions");
 
             Button scan = new Button(RunScan) { text = "Scan Scene" };
-            Button apply = new Button(ApplyScan) { text = "Apply" };
+            Button apply = new Button(ApplyScan) { text = "Apply to selected" };
             apply.SetEnabled(_candidates != null && _candidates.Count > 0);
 
             actions.Add(scan);
@@ -188,7 +247,7 @@ namespace Nekuzaky.Vicinity.Editor
 
             if (_candidates == null)
             {
-                _content.Add(Hint("Scan the scene to list what Vicinity could take over, heaviest first."));
+                _content.Add(Hint("Scan to list what Vicinity could take over, heaviest first."));
                 return;
             }
 
@@ -199,6 +258,20 @@ namespace Nekuzaky.Vicinity.Editor
             }
 
             _content.Add(BuildCandidateList());
+        }
+
+        private void SetUpSceneFromDashboard()
+        {
+            SetupResult result = VicinitySceneSetup.SetUpScene(false);
+
+            _candidates = VicinitySceneScanner.Scan();
+            SelectTab(0);
+
+            string message = result.Equipped == 0
+                ? "Nothing new to manage."
+                : $"{result.Equipped} objects are now managed, {VicinityEditorStyles.DescribeBytes(result.TotalBytes)} of models.";
+
+            ShowNotification(new GUIContent(message));
         }
 
         private VisualElement BuildCandidateList()

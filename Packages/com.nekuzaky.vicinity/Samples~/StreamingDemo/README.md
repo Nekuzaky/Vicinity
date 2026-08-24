@@ -4,9 +4,9 @@ A field of 5,000 managed objects, built for one purpose: watching memory drop as
 
 ## Run it
 
-1. `Window > Vicinity > Build the Streaming Demo Scene`
+1. `Tools > Vicinity > Build the Streaming Demo Scene`
 2. Press Play.
-3. `Window > Vicinity > Dashboard`, then the **Live** tab.
+3. `Tools > Vicinity > Dashboard`, then the **Live** tab.
 
 The viewpoint walks back and forth on its own. Watch the *Loaded* count and the memory graph rise
 as it approaches the field and fall as it leaves.

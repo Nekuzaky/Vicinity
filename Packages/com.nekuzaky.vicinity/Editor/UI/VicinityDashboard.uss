@@ -220,3 +220,17 @@
 .vicinity-candidate-row:hover {
     border-color: var(--unity-colors-default-border);
 }
+
+.vicinity-hero-button {
+    height: 40px;
+    margin: 4px 0 6px 0;
+    border-radius: 6px;
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.vicinity-foldout {
+    margin: 4px 0 4px 0;
+    font-size: 11px;
+    opacity: 0.7;
+}

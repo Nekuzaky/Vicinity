@@ -10,7 +10,7 @@ interfere, and Vicinity will never generate LODs, simplify meshes, or manage LOD
 
 ## Getting started without writing code
 
-1. `Window > Vicinity > Dashboard`
+1. `Tools > Vicinity > Dashboard`
 2. **Scan Scene** — lists everything Vicinity could take over, heaviest first
 3. **Apply** — adds the components, creates a manager and a viewpoint if the scene has none
 

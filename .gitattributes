@@ -1,0 +1,32 @@
+* text=auto
+
+# GitHub counts every tracked file when it reports the languages of this repository.
+# Unity project scaffolding is not written by hand and must not be counted.
+*.meta            linguist-generated
+*.asset           linguist-generated
+*.unity           linguist-generated
+*.prefab          linguist-generated
+*.mat             linguist-generated
+*.wlt             linguist-generated
+*.asmdef          linguist-language=JSON
+Assets/TutorialInfo/** linguist-vendored
+ProjectSettings/** linguist-generated
+Packages/packages-lock.json linguist-generated
+
+# Unity writes these as YAML. Setting the merge driver lets Unity's own tool
+# resolve conflicts instead of producing an unopenable scene.
+*.unity           merge=unityyamlmerge eol=lf
+*.prefab          merge=unityyamlmerge eol=lf
+*.asset           merge=unityyamlmerge eol=lf
+*.controller      merge=unityyamlmerge eol=lf
+*.anim            merge=unityyamlmerge eol=lf
+*.physicMaterial  merge=unityyamlmerge eol=lf
+*.physicsMaterial2D merge=unityyamlmerge eol=lf
+
+# Line endings that must never be rewritten.
+*.cs              text diff=csharp
+*.md              text
+*.json            text
+*.uxml            text
+*.uss             text
+*.yml             text

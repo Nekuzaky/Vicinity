@@ -14,7 +14,7 @@ leaves the question of which mesh is drawn to `LODGroup` and Mesh LOD.
 
 **Setting a scene up without writing code**
 
-- `Window > Vicinity > Dashboard` with three tabs.
+- `Tools > Vicinity > Dashboard` with three tabs.
 - **Setup** — checks URP, the SRP Batcher, the GPU Resident Drawer, Mipmap Streaming and
   Addressables, each with a one-line explanation and a fix button where a fix exists. Scans the
   scene, lists candidates heaviest first, and equips the selected ones in one undoable step.
